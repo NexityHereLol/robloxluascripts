@@ -50,9 +50,23 @@ if playerID and isWhitelisted(playerID) then
     print("Player is whitelisted!")
     local placeID = game.PlaceId
 
-    if placeID == "18629053284" then
+    print("Current Place ID: " .. tostring(placeID))
+    
+    if placeID == 18629053284 then
         print('survival odyssey loadstring:loaded')
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/skidware/main/soddysey.lua"))()
+        local scriptSource = game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/skidware/main/soddysey.lua")
+        print("Script source length: " .. tostring(#scriptSource))
+        local func, err = loadstring(scriptSource)
+        if func then
+            local success, execErr = pcall(func)
+            if not success then
+                print("Error executing script: " .. execErr)
+            end
+        else
+            print("Failed to load script: " .. err)
+        end
+    else
+        print("Not the correct Place ID.")
     end
 else
     print("Player is not whitelisted or player ID not available.")
