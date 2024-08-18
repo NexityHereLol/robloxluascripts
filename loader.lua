@@ -53,8 +53,6 @@ if playerID and isWhitelisted(playerID) then
     if placeID == "18629053284" then
         print('survival odyssey loadstring:loaded')
         loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/skidware/main/soddysey.lua"))()
-        else
-        print('other game script or universal loadstring:loaded')
     end
 else
     print("Player is not whitelisted or player ID not available.")
