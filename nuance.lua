@@ -1,3 +1,4 @@
+-- survival odyssey
 local roblo_lib = {}
 
 function roblo_lib:CreateLib(name)
@@ -398,22 +399,53 @@ function roblo_lib:CreateLib(name)
 		
 		--
 		
+		--local tab_template = Instance.new("ScrollingFrame")
+		--local UIPadding_ = Instance.new("UIPadding")
+		--local UIListLayout_ = Instance.new("UIListLayout")
+
+		--tab_template.Name = "tab_template"
+		--tab_template.Visible = false
+		--tab_template.Parent = ContentHolder
+		--tab_template.Active = true
+		--tab_template.BackgroundColor3 = Color3.new(1, 1, 1)
+		--tab_template.BackgroundTransparency = 1
+		--tab_template.BorderColor3 = Color3.new(0, 0, 0)
+		--tab_template.BorderSizePixel = 0
+		--tab_template.Position = UDim2.new(0, 0, 0.138333336, 0)
+		--tab_template.Size = UDim2.new(1, 0, 0.861666679, 0)
+		--tab_template.ScrollBarThickness = 0
+		--tab_template.CanvasSize = UDim2('set code')
+		
+		--UIPadding_.Parent = tab_template
+		--UIPadding_.PaddingBottom = UDim.new(0, 1)
+		--UIPadding_.PaddingLeft = UDim.new(0, 1)
+		--UIPadding_.PaddingRight = UDim.new(0, 1)
+		--UIPadding_.PaddingTop = UDim.new(0, 1)
+
+		--UIListLayout_.Parent = tab_template
+		--UIListLayout_.SortOrder = Enum.SortOrder.LayoutOrder
+		--UIListLayout_.Padding = UDim.new(0, 4)
+		
+		--canvas stuff
+		
+		
 		local tab_template = Instance.new("ScrollingFrame")
 		local UIPadding_ = Instance.new("UIPadding")
 		local UIListLayout_ = Instance.new("UIListLayout")
 
 		tab_template.Name = "tab_template"
-		tab_template.Visible = false
+		tab_template.Visible = false	
 		tab_template.Parent = ContentHolder
 		tab_template.Active = true
 		tab_template.BackgroundColor3 = Color3.new(1, 1, 1)
 		tab_template.BackgroundTransparency = 1
 		tab_template.BorderColor3 = Color3.new(0, 0, 0)
 		tab_template.BorderSizePixel = 0
-		tab_template.Position = UDim2.new(0, 0, 0.138333336, 0)
-		tab_template.Size = UDim2.new(1, 0, 0.861666679, 0)
+		tab_template.Position = UDim2.new(0, 0, 0.138, 0)
+		tab_template.Size = UDim2.new(1, 0, 0.862, 0)
 		tab_template.ScrollBarThickness = 0
-		
+		tab_template.CanvasSize = UDim2.new(0, 0, 0, 10000)
+
 		UIPadding_.Parent = tab_template
 		UIPadding_.PaddingBottom = UDim.new(0, 1)
 		UIPadding_.PaddingLeft = UDim.new(0, 1)
@@ -424,57 +456,8 @@ function roblo_lib:CreateLib(name)
 		UIListLayout_.SortOrder = Enum.SortOrder.LayoutOrder
 		UIListLayout_.Padding = UDim.new(0, 4)
 		
-		--tabpage.MouseButton1Click:Connect(function()
-		--	for i,v in next, Holder:GetChildren() do 
-		--		 local env_checker = true
-		--		
-		--		if v:IsA("ImageButton") then
-			--		
-			--		tabpage.BorderColor3 = Color3.fromRGB(1,1,1)
-			--		wait(0.05)
-					
-				--	if env_checker == true then
-				--		if tabpage.BorderColor3 == Color3.fromRGB(1,1,1) then
-				--			print(tabpage.Name)
-				--			local speed = 0.2
-				--			local tf = TweenInfo.new(speed, Enum.EasingStyle.Sine , Enum.EasingDirection.Out, 0.5)
-				--			local ts = game:GetService("TweenService")
-				--			local checkfalse = Color3.fromRGB(63, 63, 63)	
-				--			ts:Create(tabpage,tf, {BackgroundColor3 = checkfalse}):Play()
-				--			wait()
-					--	else
-					--		if (v.BackgroundColor3 == Color3.fromRGB(83,83,83)) then
-					--			local speed = 0.2
-						--		local tf = TweenInfo.new(speed, Enum.EasingStyle.Sine , Enum.EasingDirection.Out, 0.5)
-						--		local ts = game:GetService("TweenService")
-						--		local checkfalse = Color3.fromRGB(83,83,83)
-						--	end
-						--end
-					--else
-					--	if v:IsA("ImageButton") then
-							--tabpage.BorderColor3 = Color3.fromRGB(2,2,2)
-							--wait(0.05)
-							--if tabpage.BorderColor3 == Color3.fromRGB(2,2,2) then
-								
-						--	end
-						--end
-					--end
-					
-
-					--print('other tab')
-				--end
-					
-				--end
-				--for i,v in next, ContentHolder:GetChildren() do
-				--	if v.Name == "tabname" then
-					--	print('tabname failed to go invis!')
-					--else
-					--	v.Visible = false
-					--end
-				--end 
-				--tab_template.Visible = true
-				--tab_name.Text = tostring(tabname)
-		--end)
+		--canvas stuff
+		
 		
 		local TweenService = game:GetService("TweenService")
 
@@ -538,6 +521,175 @@ function roblo_lib:CreateLib(name)
 		
 		--
 		local innertab = {}
+		
+		function innertab:CreateSlider(slidertitle, maxvalue, minvalue, callback)
+			
+			local slider = Instance.new("Frame")
+			local slider_name = Instance.new("TextLabel")
+			local UIPadding = Instance.new("UIPadding")
+			local slider_val = Instance.new("TextLabel")
+			local UIPadding_2 = Instance.new("UIPadding")
+			local sliderbtn = Instance.new("ImageButton")
+			
+			-- Create the slider frame
+			slider.Name = "slider"
+			slider.Parent = tab_template
+			slider.BackgroundColor3 = Color3.new(0.247059, 0.247059, 0.247059)
+			slider.BorderColor3 = Color3.new(0, 0, 0)
+			slider.BorderSizePixel = 0
+			slider.Position = UDim2.new(0, 0, 0.630929172, 0)
+			slider.Size = UDim2.new(0, 261, 0, 48)
+
+			slider_name.Name = "slider_name"
+			slider_name.Parent = slider
+			slider_name.Active = true
+			slider_name.BackgroundColor3 = Color3.new(1, 1, 1)
+			slider_name.BackgroundTransparency = 1
+			slider_name.BorderColor3 = Color3.new(0, 0, 0)
+			slider_name.BorderSizePixel = 0
+			slider_name.Position = UDim2.new(-0.00373132923, 0, 0.0789477006, 0)
+			slider_name.Size = UDim2.new(0.570881248, 0, 0.433114141, 0)
+			slider_name.Font = Enum.Font.Arial
+			slider_name.Text = slidertitle or "untitled slider"
+			slider_name.TextColor3 = Color3.new(1, 1, 1)
+			slider_name.TextSize = 14
+			slider_name.TextXAlignment = Enum.TextXAlignment.Left
+
+			UIPadding.Parent = slider_name
+			UIPadding.PaddingBottom = UDim.new(0, 6)
+			UIPadding.PaddingLeft = UDim.new(0, 6)
+			UIPadding.PaddingRight = UDim.new(0, 6)
+			UIPadding.PaddingTop = UDim.new(0, 6)
+
+			slider_val.Name = "slider_val"
+			slider_val.Parent = slider
+			slider_val.Active = true
+			slider_val.BackgroundColor3 = Color3.new(1, 1, 1)
+			slider_val.BackgroundTransparency = 1
+			slider_val.BorderColor3 = Color3.new(0, 0, 0)
+			slider_val.BorderSizePixel = 0
+			slider_val.Position = UDim2.new(0.628452599, 0, 0.0789477006, 0)
+			slider_val.Size = UDim2.new(0.379168272, 0, 0.433114141, 0)
+			slider_val.Font = Enum.Font.Arial
+			slider_val.Text = ""
+			slider_val.TextColor3 = Color3.new(1, 1, 1)
+			slider_val.TextSize = 14
+			slider_val.TextXAlignment = Enum.TextXAlignment.Right
+
+			UIPadding_2.Parent = slider_val
+			UIPadding_2.PaddingBottom = UDim.new(0, 6)
+			UIPadding_2.PaddingLeft = UDim.new(0, 6)
+			UIPadding_2.PaddingRight = UDim.new(0, 6)
+			UIPadding_2.PaddingTop = UDim.new(0, 6)
+
+			sliderbtn.Name = "sliderbtn"
+			sliderbtn.Parent = slider
+			sliderbtn.BackgroundColor3 = Color3.new(1, 1, 1)
+			sliderbtn.BorderColor3 = Color3.new(0, 0, 0)
+			sliderbtn.BorderSizePixel = 0
+			sliderbtn.Position = UDim2.new(0.042145595, 0, 0.657895386, 0)
+			sliderbtn.Size = UDim2.new(0, 237, 0, 7)
+			sliderbtn.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+
+			local mouse = game.Players.LocalPlayer:GetMouse()
+			local uis = game:GetService("UserInputService")
+			local tweenService = game:GetService("TweenService")
+			local Value
+
+			local MIN_WIDTH = 5
+			local SLIDER_WIDTH = 237  -- Width of the slider bar
+
+			-- Update slider value function
+			local function updateSliderValue()
+				local sliderWidth = sliderbtn.AbsoluteSize.X
+				if sliderWidth <= MIN_WIDTH then
+					Value = tonumber(minvalue)
+				else
+					Value = math.floor((((tonumber(maxvalue) - tonumber(minvalue)) / (SLIDER_WIDTH - MIN_WIDTH)) * (sliderWidth - MIN_WIDTH)) + tonumber(minvalue))
+				end
+				slider_val.Text = tostring(Value)
+				pcall(function()
+					callback(Value)
+				end)
+			end
+
+			-- Slider button drag functionality
+			sliderbtn.MouseButton1Down:Connect(function()
+				local moveconnection
+				local releaseconnection
+
+				updateSliderValue()
+				local initialSize = math.clamp(mouse.X - sliderbtn.AbsolutePosition.X, MIN_WIDTH, SLIDER_WIDTH)
+				tweenService:Create(sliderbtn, TweenInfo.new(0.1), {Size = UDim2.new(0, initialSize, 0, 7)}):Play()
+
+				moveconnection = mouse.Move:Connect(function()
+					local newSize = math.clamp(mouse.X - sliderbtn.AbsolutePosition.X, MIN_WIDTH, SLIDER_WIDTH)
+					updateSliderValue()
+					tweenService:Create(sliderbtn, TweenInfo.new(0.1), {Size = UDim2.new(0, newSize, 0, 7)}):Play()
+				end)
+
+				releaseconnection = uis.InputEnded:Connect(function(input)
+					if input.UserInputType == Enum.UserInputType.MouseButton1 then
+						local finalSize = math.clamp(mouse.X - sliderbtn.AbsolutePosition.X, MIN_WIDTH, SLIDER_WIDTH)
+						updateSliderValue()
+						tweenService:Create(sliderbtn, TweenInfo.new(0.1), {Size = UDim2.new(0, finalSize, 0, 7)}):Play()
+						moveconnection:Disconnect()
+						releaseconnection:Disconnect()
+					end
+				end)
+			end)
+
+		end
+
+
+		
+		function innertab:CreateSubDivider(name)
+			local divider = Instance.new("Frame")
+			local dividerLine = Instance.new("Frame")
+			local divider_name = Instance.new("TextLabel")
+			local UIPadding = Instance.new("UIPadding")
+
+			-- Properties
+
+			divider.Name = "divider"
+			divider.Parent = tab_template
+			divider.BackgroundColor3 = Color3.new(1, 1, 1)
+			divider.BackgroundTransparency = 1
+			divider.BorderColor3 = Color3.new(0, 0, 0)
+			divider.BorderSizePixel = 0
+			divider.Position = UDim2.new(0, 0, 0.354046583, 0)
+			divider.Size = UDim2.new(0, 268, 0, 57)
+
+			dividerLine.Name = "dividerLine"
+			dividerLine.Parent = divider
+			dividerLine.BackgroundColor3 = Color3.new(0.247059, 0.247059, 0.247059)
+			dividerLine.BorderColor3 = Color3.new(0, 0, 0)
+			dividerLine.BorderSizePixel = 0
+			dividerLine.Position = UDim2.new(0, 0, 0.649122834, 0)
+			dividerLine.Size = UDim2.new(0, 267, 0, 7)
+
+			divider_name.Name = name
+			divider_name.Parent = divider
+			divider_name.Active = true
+			divider_name.BackgroundColor3 = Color3.new(1, 1, 1)
+			divider_name.BackgroundTransparency = 1
+			divider_name.BorderColor3 = Color3.new(0, 0, 0)
+			divider_name.BorderSizePixel = 0
+			divider_name.Position = UDim2.new(-0.00373157114, 0, 0.0789479017, 0)
+			divider_name.Size = UDim2.new(1.00000012, 0, 0.578947365, 0)
+			divider_name.Font = Enum.Font.Arial
+			divider_name.Text = name or "untitled_divider"
+			divider_name.TextColor3 = Color3.new(1, 1, 1)
+			divider_name.TextSize = 14
+			divider_name.TextXAlignment = Enum.TextXAlignment.Left
+
+			UIPadding.Parent = divider_name
+			UIPadding.PaddingBottom = UDim.new(0, 6)
+			UIPadding.PaddingLeft = UDim.new(0, 6)
+			UIPadding.PaddingRight = UDim.new(0, 6)
+			UIPadding.PaddingTop = UDim.new(0, 6)
+		end
+		
 		function innertab:CreateCheckBox(name,callback)
 			local checkbox = Instance.new("Frame")
 			local checkboxname = Instance.new("TextLabel")
@@ -745,5 +897,7 @@ function roblo_lib:CreateLib(name)
 	coroutine.wrap(KSDLOBQ_fake_script)()
 	return createtab
 end
+
+--contents
 
 return roblo_lib
