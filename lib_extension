@@ -177,16 +177,27 @@ function roblo_lib:CreateLib(name)
         })
 
         tab.MouseButton1Click:Connect(function()
+            -- Hide all panels first
             for _, child in ipairs(content:GetChildren()) do
-                if child:IsA("ScrollingFrame") then child.Visible = false end
+                if child:IsA("ScrollingFrame") then
+                    child.Visible = false
+                end
             end
+            -- Reset previous tab color if exists
             if currentTab then
                 TweenService:Create(currentTab, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(83,83,83)}):Play()
             end
+            -- Highlight current tab
             TweenService:Create(tab, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(63,63,63)}):Play()
+
             panel.Visible = true
             currentTab = tab
         end)
+
+        -- Auto-select the first tab created
+        if not currentTab then
+            tab:MouseButton1Click()
+        end
 
         local tabapi = {}
 
