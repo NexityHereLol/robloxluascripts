@@ -1,1037 +1,194 @@
--- yba client
 local roblo_lib = {}
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
-function roblo_lib:CreateLib(name)
-	
-	local createtab = {}
+local function create(class, props, children)
+	local inst = Instance.new(class)
+	for k, v in pairs(props) do inst[k] = v end
+	for _, c in ipairs(children or {}) do c.Parent = inst end
+	return inst
+end
 
-	local uis = game:GetService("UserInputService")
-	local TweenService = game:GetService("TweenService")
+local function addPadding(obj, pad)
+	create("UIPadding", {
+		Parent = obj,
+		PaddingTop = UDim.new(0, pad),
+		PaddingBottom = UDim.new(0, pad),
+		PaddingLeft = UDim.new(0, pad),
+		PaddingRight = UDim.new(0, pad)
+	})
+end
 
-	local roblo = Instance.new("ScreenGui")
-	local Main = Instance.new("Frame")
+function roblo_lib:CreateLib(titleText)
+	local lib = {}
+	local gui = create("ScreenGui", {
+		Name = "roblo_ui",
+		ResetOnSpawn = false,
+		Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+	})
 
-	local uis = game:GetService("UserInputService")
-	local TweenService = game:GetService("TweenService")
+	local main = create("Frame", {
+		Size = UDim2.new(0, 420, 0, 320),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		BackgroundColor3 = Color3.fromRGB(45, 45, 45),
+		Active = true,
+		Parent = gui
+	})
 
-	-- Create UI elements
-	local roblo = Instance.new("ScreenGui")
-	local Main = Instance.new("Frame")
-	Main.Size = UDim2.new(0, 400, 0, 300)  -- Set the size of the Frame
-	Main.Position = UDim2.new(0.5, 0, 0.5, 0)  -- Initial position (centered)
-	Main.AnchorPoint = Vector2.new(0.5, 0.5)  -- Center the Frame around its anchor point
-	Main.BackgroundTransparency = 0  -- Fully opaque background
-	Main.Visible = true  -- Initially visible
-	Main.Parent = roblo
-	roblo.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")  -- Add the ScreenGui to the PlayerGui
+	local top = create("Frame", {
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundColor3 = Color3.fromRGB(33, 149, 27),
+		Parent = main
+	})
+	create("TextLabel", {
+		Size = UDim2.new(1, -30, 1, 0),
+		Position = UDim2.new(0, 5, 0, 0),
+		Text = titleText,
+		Font = Enum.Font.ArialBold,
+		TextSize = 14,
+		TextColor3 = Color3.new(1, 1, 1),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		BackgroundTransparency = 1,
+		Parent = top
+	})
+	create("ImageButton", {
+		Size = UDim2.new(0, 20, 0, 20),
+		Position = UDim2.new(1, -25, 0.5, -10),
+		Image = "rbxassetid://18114937392",
+		BackgroundTransparency = 1,
+		Parent = top
+	}).MouseButton1Click:Connect(function()
+		gui:Destroy()
+	end)
 
-	-- Define off-screen position (left of the viewport)
-	local offScreenPosition = UDim2.new(-0.5, 0, 0.5, 0)  -- Move completely off the left side of the screen
-
-	-- Tween information
-	local tweenTime = 0.5  -- Time in seconds for the animation
-	local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-
-	-- Variables to track positions and tween progress
-	local originalPosition = Main.Position
-	local lastPosition = originalPosition  -- Start with the initial position
-	local tweenInProgress = false  -- Track if a tween is currently playing
-	local isVisible = true  -- Initially visible
-
-	-- Create tweens for position transitions
-	local moveInTween = TweenService:Create(Main, tweenInfo, {Position = lastPosition})
-	local moveOutTween = TweenService:Create(Main, tweenInfo, {Position = offScreenPosition})
-
-	-- Function to toggle visibility with position transition
-	local function toggleVisibility()
-		if tweenInProgress then
-			return  -- Exit if a tween is already in progress
+	local dragging, dragStart, startPos
+	top.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = i.Position
+			startPos = main.Position
 		end
-
-		tweenInProgress = true
-
-		if isVisible then
-			-- Move out of the screen to the left and save the current position
-			lastPosition = Main.Position
-			moveOutTween:Play()
-			moveOutTween.Completed:Connect(function()
-				Main.Visible = false
-				tweenInProgress = false
-			end)
-		else
-			-- Make visible and move in from the last position
-			Main.Visible = true
-			moveInTween = TweenService:Create(Main, tweenInfo, {Position = lastPosition})
-			moveInTween:Play()
-			moveInTween.Completed:Connect(function()
-				tweenInProgress = false
-			end)
+	end)
+	UserInputService.InputChanged:Connect(function(i)
+		if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+			local delta = i.Position - dragStart
+			main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		end
-		isVisible = not isVisible
-	end
-
-	-- Connect input event
-	uis.InputBegan:Connect(function(key, chat)
-		if key.KeyCode == Enum.KeyCode.RightControl then
-			toggleVisibility()
+	end)
+	UserInputService.InputEnded:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
 		end
 	end)
 
-	--uis.InputBegan:Connect(function(key, chat)
-	--	if key.KeyCode == Enum.KeyCode.RightControl then
-	--		if Main.Visible == true then
-	--			Main.Visible = false
-	--		else
-	--			Main.Visible = true
-	--		end
-	--	end
-	--end)
+	local nav = create("Frame", {
+		Size = UDim2.new(0, 120, 1, -30),
+		Position = UDim2.new(0, 0, 0, 30),
+		BackgroundColor3 = Color3.fromRGB(63, 63, 63),
+		Parent = main
+	})
+	local tabList = create("ScrollingFrame", {
+		Size = UDim2.new(1, 0, 1, 0),
+		ScrollBarThickness = 0,
+		CanvasSize = UDim2.new(0, 0, 0, 1000),
+		BackgroundTransparency = 1,
+		Parent = nav
+	})
+	create("UIListLayout", {
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Padding = UDim.new(0, 4),
+		Parent = tabList
+	})
 
-	roblo.Name = "roblo"
-	roblo.IgnoreGuiInset = false
-	roblo.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-	roblo.ResetOnSpawn = false
+	local content = create("Frame", {
+		Size = UDim2.new(1, -130, 1, -40),
+		Position = UDim2.new(0, 125, 0, 35),
+		BackgroundTransparency = 1,
+		Parent = main
+	})
 
-	Main.Name = "Main"
-	Main.Parent = roblo
-	Main.AnchorPoint = Vector2.new(0.5, 0.5)
-	Main.BackgroundColor3 = Color3.new(0.196078, 0.196078, 0.196078)
-	Main.BorderColor3 = Color3.new(0, 0, 0)
-	Main.BorderSizePixel = 0
-	Main.Active = true
-	Main.Position = UDim2.new(0, 0, 1, 0)
-	Main.AnchorPoint = Vector2.new(0, 1)
-	Main.Size = UDim2.new(0, 400, 0, 300)
+	local currentTab
+	function lib:CreateTab(name, desc)
+		local tabBtn = create("ImageButton", {
+			Size = UDim2.new(1, -10, 0, 30),
+			BackgroundColor3 = Color3.fromRGB(83, 83, 83),
+			AutoButtonColor = false,
+			Parent = tabList
+		})
+		create("TextLabel", {
+			Text = name,
+			Size = UDim2.new(1, 0, 1, 0),
+			TextColor3 = Color3.new(1,1,1),
+			Font = Enum.Font.Arial,
+			TextSize = 14,
+			BackgroundTransparency = 1,
+			Parent = tabBtn
+		})
 
-	local DropShadowHolder = Instance.new("Frame")
-	local DropShadow = Instance.new("ImageLabel")
-	local TopBar = Instance.new("Frame")
-	local Extension = Instance.new("Frame")
-	local ui_name = Instance.new("TextLabel")
-	local UIPadding_7 = Instance.new("UIPadding")
-	local Line = Instance.new("Frame")
-	local close_button = Instance.new("ImageButton")
+		local tabContent = create("ScrollingFrame", {
+			Size = UDim2.new(1, 0, 1, 0),
+			CanvasSize = UDim2.new(0, 0, 0, 1000),
+			ScrollBarThickness = 4,
+			Visible = false,
+			BackgroundTransparency = 1,
+			Parent = content
+		})
+		create("UIListLayout", {
+			SortOrder = Enum.SortOrder.LayoutOrder,
+			Padding = UDim.new(0, 6),
+			Parent = tabContent
+		})
 
-	DropShadowHolder.Name = "DropShadowHolder"
-	DropShadowHolder.Parent = Main
-	DropShadowHolder.BackgroundTransparency = 1
-	DropShadowHolder.BorderSizePixel = 0
-	DropShadowHolder.Size = UDim2.new(1, 0, 1, 0)
-	DropShadowHolder.ZIndex = 0
+		local tabApi = {}
 
-	DropShadow.Name = "DropShadow"
-	DropShadow.Parent = DropShadowHolder
-	DropShadow.AnchorPoint = Vector2.new(0.5, 0.5)
-	DropShadow.BackgroundTransparency = 1
-	DropShadow.BorderSizePixel = 0
-	DropShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-	DropShadow.Size = UDim2.new(1, 47, 1, 47)
-	DropShadow.ZIndex = 0
-	DropShadow.Image = "rbxassetid://6015897843"
-	DropShadow.ImageColor3 = Color3.new(0, 0, 0)
-	DropShadow.ImageTransparency = 0.5
-	DropShadow.ScaleType = Enum.ScaleType.Slice
-	DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
-
-	Extension.Name = "Extension"
-	Extension.Parent = TopBar
-	Extension.AnchorPoint = Vector2.new(0, 1)
-	Extension.BackgroundColor3 = Color3.fromRGB(33, 149, 27)
-	Extension.BorderColor3 = Color3.new(0, 0, 0)
-	Extension.BorderSizePixel = 0
-	Extension.Position = UDim2.new(0, 0, 1, 0)
-	Extension.Size = UDim2.new(1, 0, 0.5, 0)
-
-	ui_name.Name = "ui_name"
-	ui_name.Parent = TopBar
-	ui_name.BackgroundColor3 = Color3.new(1, 1, 1)
-	ui_name.BackgroundTransparency = 1
-	ui_name.BorderColor3 = Color3.new(0, 0, 0)
-	ui_name.BorderSizePixel = 0
-	ui_name.Size = UDim2.new(0.5, 0, 1, 0)
-	ui_name.Font = Enum.Font.ArialBold
-	ui_name.Text = name or "untitled LIB"
-	ui_name.TextColor3 = Color3.new(1, 1, 1)
-	ui_name.TextSize = 15
-	ui_name.TextXAlignment = Enum.TextXAlignment.Left
-
-	UIPadding_7.Parent = ui_name
-	UIPadding_7.PaddingLeft = UDim.new(0, 4)
-
-	Line.Name = "Line"
-	Line.Parent = TopBar
-	Line.AnchorPoint = Vector2.new(0, 1)
-	Line.BackgroundColor3 = Color3.new(1, 1, 1)
-	Line.BorderColor3 = Color3.new(0, 0, 0)
-	Line.BorderSizePixel = 0
-	Line.Position = UDim2.new(0, 0, 1, 0)
-	Line.Size = UDim2.new(1, 0, 0, 1)
-
-	close_button.Name = "close_button"
-	close_button.Parent = TopBar
-	close_button.AnchorPoint = Vector2.new(1, 0)
-	close_button.BackgroundColor3 = Color3.new(1, 1, 1)
-	close_button.BackgroundTransparency = 1
-	close_button.BorderColor3 = Color3.new(0, 0, 0)
-	close_button.BorderSizePixel = 0
-	close_button.Position = UDim2.new(1, -5, 0, 5)
-	close_button.Size = UDim2.new(0, 20, 0, 20)
-	close_button.Image = "rbxassetid://18114937392"
-
-	TopBar.Name = "TopBar"
-	TopBar.Parent = Main
-	TopBar.BackgroundColor3 = Color3.fromRGB(33, 149, 27)
-	TopBar.BorderColor3 = Color3.new(0, 0, 0)
-	TopBar.BorderSizePixel = 0
-	TopBar.Size = UDim2.new(1, 0, 0, 30)
-
-	local ContentHolder = Instance.new("Frame")
-	
-	ContentHolder.Name = "ContentHolder"
-	ContentHolder.Parent = Main
-	ContentHolder.AnchorPoint = Vector2.new(1, 0)
-	ContentHolder.BackgroundColor3 = Color3.new(1, 1, 1)
-	ContentHolder.BackgroundTransparency = 1
-	ContentHolder.BorderColor3 = Color3.new(0, 0, 0)
-	ContentHolder.BorderSizePixel = 0
-	ContentHolder.Position = UDim2.new(1, -6, 0, 36)
-	ContentHolder.Size = UDim2.new(1, -132, 1, -42)
-
-	-- Instances
-
-	local tabname = Instance.new("Frame")
-	local tab_name = Instance.new("TextLabel")
-	local UIPadding = Instance.new("UIPadding")
-
-	-- Properties
-
-	tabname.Name = "tabname"
-	tabname.Parent = ContentHolder
-	tabname.BackgroundColor3 = Color3.new(1, 1, 1)
-	tabname.BackgroundTransparency = 1
-	tabname.BorderColor3 = Color3.new(0, 0, 0)
-	tabname.BorderSizePixel = 0
-	tabname.Size = UDim2.new(0, 92, 0, 30)
-
-	tab_name.Name = "tab_name"
-	tab_name.Parent = tabname
-	tab_name.Active = true
-	tab_name.BackgroundColor3 = Color3.new(1, 1, 1)
-	tab_name.BackgroundTransparency = 1
-	tab_name.BorderColor3 = Color3.new(0, 0, 0)
-	tab_name.BorderSizePixel = 0
-	tab_name.Position = UDim2.new(0, 0, 0.333333343, 0)
-	tab_name.Size = UDim2.new(2.8585763, 0, 0.400000006, 0)
-	tab_name.Font = Enum.Font.ArialBold
-	tab_name.Text = "script: " .. "'" .. tostring(name) .. "'" .. " loaded!"
-	tab_name.TextColor3 = Color3.new(1, 1, 1)
-	tab_name.TextSize = 15
-	tab_name.TextXAlignment = Enum.TextXAlignment.Left
-
-	UIPadding.Parent = tab_name
-	UIPadding.PaddingBottom = UDim.new(0, 6)
-	UIPadding.PaddingLeft = UDim.new(0, 6)
-	UIPadding.PaddingRight = UDim.new(0, 6)
-	UIPadding.PaddingTop = UDim.new(0, 6)
-
-	-- Scripts
-
-	local function LXMIO_fake_script() -- close_button.LocalScript 
-		local script = Instance.new('LocalScript', close_button)
-
-		close_button.MouseButton1Click:Connect(function()
-			game.Players.LocalPlayer.PlayerGui:FindFirstChild("roblo"):Destroy()
+		tabBtn.MouseButton1Click:Connect(function()
+			for _, c in ipairs(content:GetChildren()) do if c:IsA("ScrollingFrame") then c.Visible = false end end
+			if currentTab then currentTab.BackgroundColor3 = Color3.fromRGB(83,83,83) end
+			tabBtn.BackgroundColor3 = Color3.fromRGB(63,63,63)
+			tabContent.Visible = true
+			currentTab = tabBtn
 		end)
-		
-		close_button.MouseEnter:Connect(function()
-			local tweenservice = game:GetService('TweenService')
-			local animspeed = 0.2
-			local tweenfunc = TweenInfo.new(animspeed, Enum.EasingStyle.Linear , Enum.EasingDirection.Out, 0)
-			local entered = 0.5
-			game:GetService('TweenService'):Create(script.Parent, TweenInfo.new(animspeed), {ImageTransparency = entered}):Play()
-		end)	
 
-		close_button.MouseLeave:Connect(function()
-			local tweenservice = game:GetService('TweenService')
-			local animspeed = 0.2
-			local tweenfunc = TweenInfo.new(animspeed, Enum.EasingStyle.Linear , Enum.EasingDirection.Out, 0)
-			local left = 0
-			game:GetService('TweenService'):Create(script.Parent, TweenInfo.new(animspeed), {ImageTransparency = left}):Play()
-		end)
-	end
-	coroutine.wrap(LXMIO_fake_script)()
-
---
-	local Navigation = Instance.new("Frame")
-	local Holder = Instance.new("ScrollingFrame")
-	local UIPadding = Instance.new("UIPadding")
-	local UIListLayout = Instance.new("UIListLayout")
-	local tabpage = Instance.new("ImageButton")
-	local tab_title = Instance.new("TextLabel")
-	local UIPadding_2 = Instance.new("UIPadding")
-
-	-- Properties
-
-	Navigation.Name = "Navigation"
-	Navigation.Parent = Main
-	Navigation.BackgroundColor3 = Color3.new(0.247059, 0.247059, 0.247059)
-	Navigation.BorderColor3 = Color3.new(0, 0, 0)
-	Navigation.BorderSizePixel = 0
-	Navigation.Position = UDim2.new(0, 0, 0, 31)
-	Navigation.Size = UDim2.new(0, 120, 1, -31)
-
-	Holder.Name = "Holder"
-	Holder.Parent = Navigation
-	Holder.BackgroundColor3 = Color3.new(1, 1, 1)
-	Holder.BackgroundTransparency = 1
-	Holder.BorderColor3 = Color3.new(0, 0, 0)
-	Holder.BorderSizePixel = 0
-	Holder.Position = UDim2.new(0, 0, 0.0100000091, 0)
-	Holder.Size = UDim2.new(0, 120, 0, 266)
-	Holder.ScrollBarThickness = 0
-
-	UIPadding.Parent = Holder
-
-	UIListLayout.Parent = Holder
-	UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	UIListLayout.Padding = UDim.new(0, 3.5)
-
-	--tabpage.Name = "tabpage"
-	--tabpage.Parent = Holder
-	--tabpage.BackgroundColor3 = Color3.new(0.32549, 0.32549, 0.32549)
-	--tabpage.BorderColor3 = Color3.new(0, 0, 0)
-	--tabpage.BorderSizePixel = 0
-	--tabpage.Position = UDim2.new(0, 0, 0.289962828, 0)
-	--tabpage.Size = UDim2.new(0, 120, 0, 38)
-	--tabpage.AutoButtonColor = false
-	--tabpage.Image = "rbxassetid://18117415152"
-	--tabpage.ImageTransparency = 1
-
-	--tab_title.Name = "tab_title"
-	--tab_title.Parent = tabpage
-	--tab_title.BackgroundColor3 = Color3.new(1, 1, 1)
-	--tab_title.BackgroundTransparency = 1
-	--tab_title.BorderColor3 = Color3.new(0, 0, 0)
-	--tab_title.BorderSizePixel = 0
-	--tab_title.Position = UDim2.new(0, 0, 0.114285924, 0)
-	--tab_title.Size = UDim2.new(0, 58, 0, 28)
-	--tab_title.Font = Enum.Font.Arial
-	--tab_title.Text = "tab1"
-	--tab_title.TextColor3 = Color3.new(1, 1, 1)
-	--tab_title.TextSize = 14
-	--tab_title.TextXAlignment = Enum.TextXAlignment.Left
-
-	UIPadding_2.Parent = tab_title
-	UIPadding_2.PaddingBottom = UDim.new(0, 4)
-	UIPadding_2.PaddingLeft = UDim.new(0, 4)
-	UIPadding_2.PaddingRight = UDim.new(0, 4)
-	UIPadding_2.PaddingTop = UDim.new(0, 4)
-
---
-
----------------------------------------------------------------------
-
-	function createtab:CreateTab(tabname,number)
-		
-		--
-		
-		local innertab = {}
-		local tabitems = {}
-		
-		local tabpage = Instance.new("ImageButton")
-		
-		tabpage.Name = tabname
-		tabpage.Parent = Holder
-		tabpage.Archivable = false
-		tabpage.BackgroundColor3 = Color3.fromRGB(83,83,83)
-		tabpage.BorderColor3 = Color3.new(0, 0, 0)
-		tabpage.BorderSizePixel = 0
-		tabpage.Position = UDim2.new(0, 0, 0.289962828, 0)
-		tabpage.Size = UDim2.new(0, 120, 0, 38)
-		tabpage.AutoButtonColor = false
-		tabpage.Image = ""
-		--rbxassetid://18117415152
-		tabpage.ImageTransparency = 1
-		tabpage.BorderColor3 = Color3.fromRGB(0,0,0)
-
-		local tab_title = Instance.new("TextLabel")
-		local UIPadding_2 = Instance.new("UIPadding")
-
-		local function YZXT_fake_script() -- button_frame.anim 
-			local script = Instance.new('LocalScript', tabpage)
-
-			tabpage.MouseEnter:Connect(function()
-				local tweenservice = game:GetService('TweenService')
-				local animspeed = 0.2
-				local tweenfunc = TweenInfo.new(animspeed, Enum.EasingStyle.Linear , Enum.EasingDirection.Out, 0)
-				local entered = 0.5
-				game:GetService('TweenService'):Create(script.Parent, TweenInfo.new(animspeed), {BackgroundTransparency = entered}):Play()
-			end)	
-
-			tabpage.MouseLeave:Connect(function()
-				local tweenservice = game:GetService('TweenService')
-				local animspeed = 0.2
-				local tweenfunc = TweenInfo.new(animspeed, Enum.EasingStyle.Linear , Enum.EasingDirection.Out, 0)
-				local left = 0
-				game:GetService('TweenService'):Create(script.Parent, TweenInfo.new(animspeed), {BackgroundTransparency = left}):Play()
+		function tabApi:CreateButton(text, callback)
+			create("TextButton", {
+				Text = text,
+				Size = UDim2.new(1, -10, 0, 30),
+				TextColor3 = Color3.new(1,1,1),
+				Font = Enum.Font.Arial,
+				TextSize = 14,
+				BackgroundColor3 = Color3.fromRGB(60,60,60),
+				Parent = tabContent
+		 }).MouseButton1Click:Connect(function()
+				pcall(callback)
 			end)
 		end
-		coroutine.wrap(YZXT_fake_script)()
 
-		tab_title.Name = "tab_title"
-		tab_title.Parent = tabpage
-		tab_title.BackgroundColor3 = Color3.new(1, 1, 1)
-		tab_title.BackgroundTransparency = 1
-		tab_title.BorderColor3 = Color3.new(0, 0, 0)
-		tab_title.BorderSizePixel = 0
-		tab_title.Position = UDim2.new(0, 0, 0.114285924, 0)
-		tab_title.Size = UDim2.new(0, 58, 0, 28)
-		tab_title.Font = Enum.Font.Arial
-		tab_title.Text = tabname or "tab"
-		tab_title.TextColor3 = Color3.new(1, 1, 1)
-		tab_title.TextSize = 14
-		tab_title.TextXAlignment = Enum.TextXAlignment.Left
-
-		UIPadding_2.Parent = tab_title
-		UIPadding_2.PaddingBottom = UDim.new(0, 4)
-		UIPadding_2.PaddingLeft = UDim.new(0, 4)
-		UIPadding_2.PaddingRight = UDim.new(0, 4)
-		UIPadding_2.PaddingTop = UDim.new(0, 4)
-		
-		--
-		
-		--local tab_template = Instance.new("ScrollingFrame")
-		--local UIPadding_ = Instance.new("UIPadding")
-		--local UIListLayout_ = Instance.new("UIListLayout")
-
-		--tab_template.Name = "tab_template"
-		--tab_template.Visible = false
-		--tab_template.Parent = ContentHolder
-		--tab_template.Active = true
-		--tab_template.BackgroundColor3 = Color3.new(1, 1, 1)
-		--tab_template.BackgroundTransparency = 1
-		--tab_template.BorderColor3 = Color3.new(0, 0, 0)
-		--tab_template.BorderSizePixel = 0
-		--tab_template.Position = UDim2.new(0, 0, 0.138333336, 0)
-		--tab_template.Size = UDim2.new(1, 0, 0.861666679, 0)
-		--tab_template.ScrollBarThickness = 0
-		--tab_template.CanvasSize = UDim2('set code')
-		
-		--UIPadding_.Parent = tab_template
-		--UIPadding_.PaddingBottom = UDim.new(0, 1)
-		--UIPadding_.PaddingLeft = UDim.new(0, 1)
-		--UIPadding_.PaddingRight = UDim.new(0, 1)
-		--UIPadding_.PaddingTop = UDim.new(0, 1)
-
-		--UIListLayout_.Parent = tab_template
-		--UIListLayout_.SortOrder = Enum.SortOrder.LayoutOrder
-		--UIListLayout_.Padding = UDim.new(0, 4)
-		
-		--canvas stuff
-		
-		
-		local tab_template = Instance.new("ScrollingFrame")
-		local UIPadding_ = Instance.new("UIPadding")
-		local UIListLayout_ = Instance.new("UIListLayout")
-
-		tab_template.Name = "tab_template"
-		tab_template.Visible = false	
-		tab_template.Parent = ContentHolder
-		tab_template.Active = true
-		tab_template.BackgroundColor3 = Color3.new(1, 1, 1)
-		tab_template.BackgroundTransparency = 1
-		tab_template.BorderColor3 = Color3.new(0, 0, 0)
-		tab_template.BorderSizePixel = 0
-		tab_template.Position = UDim2.new(0, 0, 0.138, 0)
-		tab_template.Size = UDim2.new(1, 0, 0.862, 0)
-		tab_template.ScrollBarThickness = 0
-		tab_template.CanvasSize = UDim2.new(0, 0, 0, 10000)
-
-		UIPadding_.Parent = tab_template
-		UIPadding_.PaddingBottom = UDim.new(0, 1)
-		UIPadding_.PaddingLeft = UDim.new(0, 1)
-		UIPadding_.PaddingRight = UDim.new(0, 1)
-		UIPadding_.PaddingTop = UDim.new(0, 1)
-
-		UIListLayout_.Parent = tab_template
-		UIListLayout_.SortOrder = Enum.SortOrder.LayoutOrder
-		UIListLayout_.Padding = UDim.new(0, 4)
-		
-		--canvas stuff
-		
-		
-		local TweenService = game:GetService("TweenService")
-
-		local currentTab = nil  -- Variable to keep track of the currently selected tab
-
-		-- Function to handle tab button click
-		local function onTabClick(selectedTab)
-			for i,p in next, ContentHolder:GetChildren() do
-				if p.Name == "tabname" then
-					--print('tabname failed to go invis!')
-				else
-					p.Visible = false
-				end
-			end 
-			tab_template.Visible = true
-			tab_name.Text = tostring(tabname)
-			-- Only proceed if the clicked tab is not already selected
-			if selectedTab ~= currentTab then
-				-- If there is a currently selected tab, tween its background color to the default color
-				if currentTab then
-					local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-					local goal = {BackgroundColor3 = Color3.fromRGB(83, 83, 83)}
-					local tween = TweenService:Create(currentTab, tweenInfo, goal)
-					tween:Play()
-				end
-
-				-- Tween the newly selected tab's background color to the highlighted color
-				local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
-				local goal = {BackgroundColor3 = Color3.fromRGB(63, 63, 63)}
-				local tween = TweenService:Create(selectedTab, tweenInfo, goal)
-				tween:Play()
-
-				-- Update the current tab to the newly selected tab
-				currentTab = selectedTab
-
-				-- Show the content for the selected tab
-				local tabContent = Holder:FindFirstChild(selectedTab.Name)
-				if tabContent then
-					tabContent.Visible = true
-				end
-
-				-- Optionally hide content for previously selected tab (if needed)
-				-- if currentTab then
-				--     local oldContent = Holder:FindFirstChild(currentTab.Name)
-				--     if oldContent then
-				--         oldContent.Visible = false
-				--     end
-				-- end
-			end
+		function tabApi:CreateSubDivider(text)
+			create("TextLabel", {
+				Text = text,
+				Size = UDim2.new(1, -10, 0, 20),
+				Font = Enum.Font.ArialBold,
+				TextSize = 13,
+				TextColor3 = Color3.new(1,1,1),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				BackgroundTransparency = 1,
+				Parent = tabContent
+			})
 		end
 
-		-- Connect each tab button to the click handler
-		for _, tab in ipairs(Holder:GetChildren()) do
-			if tab:IsA("ImageButton") then
-				tab.MouseButton1Click:Connect(function()
-					onTabClick(tab)
-				end)
-			end
+		-- Auto-select first tab
+		if not currentTab then
+			tabBtn:Activate()
+			tabBtn.BackgroundColor3 = Color3.fromRGB(63,63,63)
+			tabContent.Visible = true
+			currentTab = tabBtn
 		end
 
-		
-		--
-		local innertab = {}
-		
-		function innertab:CreateSlider(slidertitle, maxvalue, minvalue, callback)
-			
-			local slider = Instance.new("Frame")
-			local slider_name = Instance.new("TextLabel")
-			local UIPadding = Instance.new("UIPadding")
-			local slider_val = Instance.new("TextLabel")
-			local UIPadding_2 = Instance.new("UIPadding")
-			local sliderbtn = Instance.new("ImageButton")
-			
-			-- Create the slider frame
-			slider.Name = "slider"
-			slider.Parent = tab_template
-			slider.BackgroundColor3 = Color3.new(0.247059, 0.247059, 0.247059)
-			slider.BorderColor3 = Color3.new(0, 0, 0)
-			slider.BorderSizePixel = 0
-			slider.Position = UDim2.new(0, 0, 0.630929172, 0)
-			slider.Size = UDim2.new(0, 261, 0, 48)
-
-			slider_name.Name = "slider_name"
-			slider_name.Parent = slider
-			slider_name.Active = true
-			slider_name.BackgroundColor3 = Color3.new(1, 1, 1)
-			slider_name.BackgroundTransparency = 1
-			slider_name.BorderColor3 = Color3.new(0, 0, 0)
-			slider_name.BorderSizePixel = 0
-			slider_name.Position = UDim2.new(-0.00373132923, 0, 0.0789477006, 0)
-			slider_name.Size = UDim2.new(0.570881248, 0, 0.433114141, 0)
-			slider_name.Font = Enum.Font.Arial
-			slider_name.Text = slidertitle or "untitled slider"
-			slider_name.TextColor3 = Color3.new(1, 1, 1)
-			slider_name.TextSize = 14
-			slider_name.TextXAlignment = Enum.TextXAlignment.Left
-
-			UIPadding.Parent = slider_name
-			UIPadding.PaddingBottom = UDim.new(0, 6)
-			UIPadding.PaddingLeft = UDim.new(0, 6)
-			UIPadding.PaddingRight = UDim.new(0, 6)
-			UIPadding.PaddingTop = UDim.new(0, 6)
-
-			slider_val.Name = "slider_val"
-			slider_val.Parent = slider
-			slider_val.Active = true
-			slider_val.BackgroundColor3 = Color3.new(1, 1, 1)
-			slider_val.BackgroundTransparency = 1
-			slider_val.BorderColor3 = Color3.new(0, 0, 0)
-			slider_val.BorderSizePixel = 0
-			slider_val.Position = UDim2.new(0.628452599, 0, 0.0789477006, 0)
-			slider_val.Size = UDim2.new(0.379168272, 0, 0.433114141, 0)
-			slider_val.Font = Enum.Font.Arial
-			slider_val.Text = ""
-			slider_val.TextColor3 = Color3.new(1, 1, 1)
-			slider_val.TextSize = 14
-			slider_val.TextXAlignment = Enum.TextXAlignment.Right
-
-			UIPadding_2.Parent = slider_val
-			UIPadding_2.PaddingBottom = UDim.new(0, 6)
-			UIPadding_2.PaddingLeft = UDim.new(0, 6)
-			UIPadding_2.PaddingRight = UDim.new(0, 6)
-			UIPadding_2.PaddingTop = UDim.new(0, 6)
-
-			sliderbtn.Name = "sliderbtn"
-			sliderbtn.Parent = slider
-			sliderbtn.BackgroundColor3 = Color3.new(1, 1, 1)
-			sliderbtn.BorderColor3 = Color3.new(0, 0, 0)
-			sliderbtn.BorderSizePixel = 0
-			sliderbtn.Position = UDim2.new(0.042145595, 0, 0.657895386, 0)
-			sliderbtn.Size = UDim2.new(0, 237, 0, 7)
-			sliderbtn.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-
-			local mouse = game.Players.LocalPlayer:GetMouse()
-			local uis = game:GetService("UserInputService")
-			local tweenService = game:GetService("TweenService")
-			local Value
-
-			local MIN_WIDTH = 5
-			local SLIDER_WIDTH = 237  -- Width of the slider bar
-
-			-- Update slider value function
-			local function updateSliderValue()
-				local sliderWidth = sliderbtn.AbsoluteSize.X
-				if sliderWidth <= MIN_WIDTH then
-					Value = tonumber(minvalue)
-				else
-					Value = math.floor((((tonumber(maxvalue) - tonumber(minvalue)) / (SLIDER_WIDTH - MIN_WIDTH)) * (sliderWidth - MIN_WIDTH)) + tonumber(minvalue))
-				end
-				slider_val.Text = tostring(Value)
-				pcall(function()
-					callback(Value)
-				end)
-			end
-
-			-- Slider button drag functionality
-			sliderbtn.MouseButton1Down:Connect(function()
-				local moveconnection
-				local releaseconnection
-
-				updateSliderValue()
-				local initialSize = math.clamp(mouse.X - sliderbtn.AbsolutePosition.X, MIN_WIDTH, SLIDER_WIDTH)
-				tweenService:Create(sliderbtn, TweenInfo.new(0.1), {Size = UDim2.new(0, initialSize, 0, 7)}):Play()
-
-				moveconnection = mouse.Move:Connect(function()
-					local newSize = math.clamp(mouse.X - sliderbtn.AbsolutePosition.X, MIN_WIDTH, SLIDER_WIDTH)
-					updateSliderValue()
-					tweenService:Create(sliderbtn, TweenInfo.new(0.1), {Size = UDim2.new(0, newSize, 0, 7)}):Play()
-				end)
-
-				releaseconnection = uis.InputEnded:Connect(function(input)
-					if input.UserInputType == Enum.UserInputType.MouseButton1 then
-						local finalSize = math.clamp(mouse.X - sliderbtn.AbsolutePosition.X, MIN_WIDTH, SLIDER_WIDTH)
-						updateSliderValue()
-						tweenService:Create(sliderbtn, TweenInfo.new(0.1), {Size = UDim2.new(0, finalSize, 0, 7)}):Play()
-						moveconnection:Disconnect()
-						releaseconnection:Disconnect()
-					end
-				end)
-			end)
-
-		end
-
-
-		
-		function innertab:CreateSubDivider(name)
-			local divider = Instance.new("Frame")
-			local dividerLine = Instance.new("Frame")
-			local divider_name = Instance.new("TextLabel")
-			local UIPadding = Instance.new("UIPadding")
-
-			-- Properties
-
-			divider.Name = "divider"
-			divider.Parent = tab_template
-			divider.BackgroundColor3 = Color3.new(1, 1, 1)
-			divider.BackgroundTransparency = 1
-			divider.BorderColor3 = Color3.new(0, 0, 0)
-			divider.BorderSizePixel = 0
-			divider.Position = UDim2.new(0, 0, 0.354046583, 0)
-			divider.Size = UDim2.new(0, 268, 0, 57)
-
-			dividerLine.Name = "dividerLine"
-			dividerLine.Parent = divider
-			dividerLine.BackgroundColor3 = Color3.new(0.247059, 0.247059, 0.247059)
-			dividerLine.BorderColor3 = Color3.new(0, 0, 0)
-			dividerLine.BorderSizePixel = 0
-			dividerLine.Position = UDim2.new(0, 0, 0.649122834, 0)
-			dividerLine.Size = UDim2.new(0, 267, 0, 7)
-
-			divider_name.Name = name
-			divider_name.Parent = divider
-			divider_name.Active = true
-			divider_name.BackgroundColor3 = Color3.new(1, 1, 1)
-			divider_name.BackgroundTransparency = 1
-			divider_name.BorderColor3 = Color3.new(0, 0, 0)
-			divider_name.BorderSizePixel = 0
-			divider_name.Position = UDim2.new(-0.00373157114, 0, 0.0789479017, 0)
-			divider_name.Size = UDim2.new(1.00000012, 0, 0.578947365, 0)
-			divider_name.Font = Enum.Font.Arial
-			divider_name.Text = name or "untitled_divider"
-			divider_name.TextColor3 = Color3.new(1, 1, 1)
-			divider_name.TextSize = 14
-			divider_name.TextXAlignment = Enum.TextXAlignment.Left
-
-			UIPadding.Parent = divider_name
-			UIPadding.PaddingBottom = UDim.new(0, 6)
-			UIPadding.PaddingLeft = UDim.new(0, 6)
-			UIPadding.PaddingRight = UDim.new(0, 6)
-			UIPadding.PaddingTop = UDim.new(0, 6)
-		end
-		
-		function innertab:CreateCheckBox(name,callback)
-			local checkbox = Instance.new("Frame")
-			local checkboxname = Instance.new("TextLabel")
-			local UIPadding = Instance.new("UIPadding")
-			local toggler = Instance.new("ImageButton")
-
-			-- Properties
-
-			checkbox.Name = "checkbox"
-			checkbox.Parent = tab_template
-			checkbox.Active = true
-			checkbox.BackgroundColor3 = Color3.new(0.247059, 0.247059, 0.247059)
-			checkbox.BorderColor3 = Color3.new(0, 0, 0)
-			checkbox.BorderSizePixel = 0
-			checkbox.Size = UDim2.new(0, 269, 0, 35)
-
-			checkboxname.Name = name or "untitled"
-			checkboxname.Parent = checkbox
-			checkboxname.Active = true
-			checkboxname.BackgroundColor3 = Color3.new(1, 1, 1)
-			checkboxname.BackgroundTransparency = 1
-			checkboxname.BorderColor3 = Color3.new(0, 0, 0)
-			checkboxname.BorderSizePixel = 0
-			checkboxname.Position = UDim2.new(0, 0, 0.166666955, 0)
-			checkboxname.Size = UDim2.new(0.784386635, 0, 0.666666746, 0)
-			checkboxname.Font = Enum.Font.Arial
-			checkboxname.Text = name or "untitled"
-			checkboxname.TextColor3 = Color3.new(1, 1, 1)
-			checkboxname.TextSize = 14
-			checkboxname.TextXAlignment = Enum.TextXAlignment.Left
-
-			UIPadding.Parent = checkboxname
-			UIPadding.PaddingBottom = UDim.new(0, 6)
-			UIPadding.PaddingLeft = UDim.new(0, 6)
-			UIPadding.PaddingRight = UDim.new(0, 6)
-			UIPadding.PaddingTop = UDim.new(0, 6)
-
-			toggler.Name = "toggler"
-			toggler.Parent = checkbox
-			toggler.BackgroundColor3 = Color3.new(0.145098, 1, 0.972549)
-			toggler.BackgroundTransparency = 1
-			toggler.BorderColor3 = Color3.new(0, 0, 0)
-			toggler.BorderSizePixel = 0
-			toggler.Position = UDim2.new(0.921892226, 0, 0.285714298, 0)
-			toggler.Size = UDim2.new(0, 14, 0, 15)
-			toggler.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-			toggler.ImageColor3 = Color3.new(1, 0.309804, 0.309804)
-
-			callback = callback or function() end
-
-			local function VXMIPL_fake_script() -- checkbox.manage 
-				local script = Instance.new('LocalScript', checkbox)
-
-				local enabled = false
-				toggler.MouseButton1Click:Connect(function()
-					if enabled == false then
-						enabled = true
-						local speed = 0.2
-						local tf = TweenInfo.new(speed, Enum.EasingStyle.Sine , Enum.EasingDirection.In, 0.5)
-						local ts = game:GetService("TweenService")
-						local checktrue = Color3.fromRGB(33, 149, 27)
-						ts:Create(toggler,tf, {ImageColor3 = checktrue}):Play()
-						--toggler.ImageColor3 = Color3.fromRGB(144,255,96)
-					else
-						enabled = false 
-						local speed = 0.2
-						local tf = TweenInfo.new(speed, Enum.EasingStyle.Sine , Enum.EasingDirection.Out, 0.5)
-						local ts = game:GetService("TweenService")
-						local checkfalse = Color3.fromRGB(255,79,79)	
-						ts:Create(toggler,tf, {ImageColor3 = checkfalse}):Play()
-						--toggler.ImageColor3 = Color3.fromRGB(255,79,79)
-					end
-					pcall(callback,enabled)
-				end)
-			end
-			coroutine.wrap(VXMIPL_fake_script)()
-		end
-		function innertab:CreateButton(name,callback)
-			
-			local button = Instance.new("Frame")
-			local buttonname = Instance.new("TextLabel")
-			local UIPadding = Instance.new("UIPadding")
-			local button_2 = Instance.new("ImageButton")
-			local btn_content = Instance.new("TextButton")
-
-			btn_content.Name = "btn_content"
-			btn_content.Parent = button
-			btn_content.BackgroundColor3 = Color3.new(1, 1, 1)
-			btn_content.BackgroundTransparency = 1
-			btn_content.BorderColor3 = Color3.new(0, 0, 0)
-			btn_content.BorderSizePixel = 0
-			btn_content.Size = UDim2.new(0, 268, 0, 35)
-			btn_content.Font = Enum.Font.SourceSans
-			btn_content.Text = ""
-			btn_content.TextColor3 = Color3.new(0, 0, 0)
-			btn_content.TextSize = 14
-			
-			button.Name = "button"
-			button.Parent = tab_template
-			button.Active = true
-			button.BackgroundColor3 = Color3.new(0.247059, 0.247059, 0.247059)
-			button.BorderColor3 = Color3.new(0, 0, 0)
-			button.BorderSizePixel = 0
-			button.Size = UDim2.new(0, 269, 0, 35)
-
-			buttonname.Name = "buttonname"
-			buttonname.Parent = button
-			buttonname.Active = true
-			buttonname.BackgroundColor3 = Color3.new(1, 1, 1)
-			buttonname.BackgroundTransparency = 1
-			buttonname.BorderColor3 = Color3.new(0, 0, 0)
-			buttonname.BorderSizePixel = 0
-			buttonname.Position = UDim2.new(0, 0, 0.166666672, 0)
-			buttonname.Size = UDim2.new(0.843866169, 0, 0.666666687, 0)
-			buttonname.Font = Enum.Font.Arial
-			buttonname.Text = name or "blank button"
-			buttonname.TextColor3 = Color3.new(1, 1, 1)
-			buttonname.TextSize = 14
-			buttonname.TextXAlignment = Enum.TextXAlignment.Left
-
-			UIPadding.Parent = buttonname
-			UIPadding.PaddingBottom = UDim.new(0, 6)
-			UIPadding.PaddingLeft = UDim.new(0, 6)
-			UIPadding.PaddingRight = UDim.new(0, 6)
-			UIPadding.PaddingTop = UDim.new(0, 6)
-
-			button_2.Name = "button"
-			button_2.Parent = button
-			button_2.BackgroundColor3 = Color3.new(1, 1, 1)
-			button_2.BackgroundTransparency = 1
-			button_2.BorderColor3 = Color3.new(0, 0, 0)
-			button_2.BorderSizePixel = 0
-			button_2.Position = UDim2.new(0.921892226, 0, 0.279142529, 0)
-			button_2.Size = UDim2.new(0, 15, 0, 15)
-			button_2.Image = "rbxassetid://18115336602"
-			
-			local function YZXT_fake_script() -- button_frame.anim 
-				local script = Instance.new('LocalScript', button)
-
-				button.MouseEnter:Connect(function()
-					local tweenservice = game:GetService('TweenService')
-					local animspeed = 0.2
-					local tweenfunc = TweenInfo.new(animspeed, Enum.EasingStyle.Linear , Enum.EasingDirection.Out, 0)
-					local entered = 0.5
-					game:GetService('TweenService'):Create(script.Parent, TweenInfo.new(animspeed), {BackgroundTransparency = entered}):Play()
-				end)
-
-				btn_content.MouseButton1Click:Connect(function()
-					pcall(callback)
-				end)		
-
-				button.MouseLeave:Connect(function()
-					local tweenservice = game:GetService('TweenService')
-					local animspeed = 0.2
-					local tweenfunc = TweenInfo.new(animspeed, Enum.EasingStyle.Linear , Enum.EasingDirection.Out, 0)
-					local left = 0
-					game:GetService('TweenService'):Create(script.Parent, TweenInfo.new(animspeed), {BackgroundTransparency = left}):Play()
-				end)
-			end
-			coroutine.wrap(YZXT_fake_script)()
-			
-		end
-
-		return innertab
+		return tabApi
 	end
-	
-	local function KSDLOBQ_fake_script() -- Main.drag 
-		local script = Instance.new('LocalScript', Main)
 
-		local UIS = game:GetService("UserInputService")
-		local frame = script.Parent
-		local dragToggle = nil
-		local dragSpeed = 0.25 -- the amount of speed you want the drag to be
-		local dragStart = nil
-		local startPos = nil
-
-		local function updateInput(input)
-			local delta = input.Position - dragStart
-			local position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-				startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-			game:GetService('TweenService'):Create(frame, TweenInfo.new(dragSpeed), {Position = position}):Play()
-		end
-
-		frame.InputBegan:Connect(function(input)
-			if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then 
-				dragToggle = true
-				dragStart = input.Position
-				startPos = frame.Position
-				input.Changed:Connect(function()
-					if input.UserInputState == Enum.UserInputState.End then
-						dragToggle = false
-					end
-				end)
-			end
-		end)
-
-		UIS.InputChanged:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-				if dragToggle then
-					updateInput(input)
-				end
-			end
-		end)
-	end
-	coroutine.wrap(KSDLOBQ_fake_script)()
-	return createtab
+	return lib
 end
-
-local zab = roblo_lib:CreateLib("skidware asset")
-local main = zab:CreateTab("storymode","all teleport locations for storymode")
-local extramap = zab:CreateTab("map","all teleport locations for map")
-local extra = zab:CreateTab("credits","person who made this script")
-local server_hop = zab:CreateTab("server hop","incase u wanna switch modes")
-
-main:CreateSubDivider("storymode teleports")
-
-main:CreateButton("talk to giorno 1",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(1, 1, -705)
-end)
-
-main:CreateButton("talk to koichi",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(-122, 2, -463)
-end)
-
-main:CreateButton("talk to giorno 2",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(-390, 1, -681)
-end)
-
-main:CreateButton("defeat bruno (first battle)",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(-238, 23, 159)
-end)
-
-main:CreateButton("talk to bruno (after battle)",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(-564, -23, -193)
-end)
-
-main:CreateButton("talk to giorno 3 (post battle)",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(-371, 2, -122)
-end)
-
-main:CreateButton("talk to fugo 1 (meet the gang)",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(-328, 2, 30)
-end)
-
-main:CreateButton("talk to mista 1 (meet the gang)",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(150, 5, 79)
-end)
-
-main:CreateButton("talk to narancia 1 (meet the gang)",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(261, 7, -240)
-end)
-
-main:CreateButton("talk to abbachio 1 (meet the gang)",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(355, 1, -313)
-end)
-
-main:CreateButton("talk to bruno 3 (begin the mission)",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(410, 1, -136)
-end)
-
-main:CreateButton("talk to trish (begin the mission)",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(-58, -25, 593)
-end)
-
-main:CreateButton("train station teleport(s) for all npc battle quests",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(-264, 1, -82)
-end)
-
-main:CreateButton("final talks (1) before beating diavolo",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(579, 1, -131)
-end)
-
-main:CreateButton("final talks (2) before beating diavolo",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(1144, 118, -147)
-end)
-
-extramap:CreateButton("joe for heaven quest", function()
-    game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(-242, 274, 287)
-end)
-
-server_hop:CreateButton("server hop",function()
-    local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
-local Players = game:GetService("Players")
-
-local player = Players.LocalPlayer
-local PlaceId = 2809202155
-local currentJobId = game.JobId
-local visitedServers = {
-    [currentJobId] = true
-}
-
-local function serverHop()
-    local servers = {}
-    local cursor = ""
-
-    local function fetchServers()
-        local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-        if cursor and cursor ~= "" then
-            url = url .. "&cursor=" .. cursor
-        end
-
-        local success, result = pcall(function()
-            return HttpService:JSONDecode(game:HttpGet(url))
-        end)
-
-        if success and result and result.data then
-            for _, server in ipairs(result.data) do
-                local id = server.id
-                local players = server.playing
-                local max = server.maxPlayers
-                if players >= 8 and players < max and not visitedServers[id] then
-                    table.insert(servers, id)
-                end
-            end
-            cursor = result.nextPageCursor
-        else
-            warn("Failed to fetch server list.")
-        end
-    end
-
-    repeat
-        fetchServers()
-        task.wait(1)
-    until #servers > 0 or not cursor
-
-    if #servers > 0 then
-        local target = servers[math.random(1, #servers)]
-        visitedServers[target] = true
-        TeleportService:TeleportToPlaceInstance(PlaceId, target, player)
-    else
-        warn("No suitable servers found (8+ players & not visited).")
-    end
-end
-
-serverHop()
-
-end)
-
-extramap:CreateButton("heaven ascension",function()
-    game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(8568, -479, 8146)
-end)
 
 return roblo_lib
