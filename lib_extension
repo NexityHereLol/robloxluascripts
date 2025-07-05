@@ -1,0 +1,338 @@
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local roblo_lib = {}
+
+-- Core function creating the inner tab API
+function roblo_lib:CreateTabSystem(Holder, ContentHolder, tab_template, tab_name)
+    local currentTab
+
+    local innerTab = {}
+    innerTab.tab_template = tab_template
+
+    local function onTabClick(selectedTab)
+        for _, p in pairs(ContentHolder:GetChildren()) do
+            if p.Name ~= "tabname" then
+                p.Visible = false
+            end
+        end
+
+        tab_name.Text = tostring(selectedTab.Name)
+
+        if selectedTab ~= currentTab then
+            if currentTab then
+                TweenService:Create(currentTab, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+                    {BackgroundColor3 = Color3.fromRGB(83, 83, 83)}):Play()
+            end
+
+            TweenService:Create(selectedTab, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+                {BackgroundColor3 = Color3.fromRGB(63, 63, 63)}):Play()
+
+            currentTab = selectedTab
+
+            local tabContent = ContentHolder:FindFirstChild(selectedTab.Name)
+            if tabContent then
+                tabContent.Visible = true
+            end
+        end
+    end
+
+    for _, tab in ipairs(Holder:GetChildren()) do
+        if tab:IsA("ImageButton") then
+            tab.MouseButton1Click:Connect(function()
+                onTabClick(tab)
+            end)
+        end
+    end
+
+    function innerTab:CreateSlider(title, maxValue, minValue, callback)
+        maxValue = tonumber(maxValue) or 100
+        minValue = tonumber(minValue) or 0
+        callback = callback or function() end
+
+        local slider = Instance.new("Frame", innerTab.tab_template)
+        slider.Name = "slider"
+        slider.BackgroundColor3 = Color3.fromRGB(63, 63, 63)
+        slider.BorderSizePixel = 0
+        slider.Size = UDim2.new(0, 261, 0, 48)
+        slider.Position = UDim2.new(0, 0, 0, #innerTab.tab_template:GetChildren() * 50)
+
+        local slider_name = Instance.new("TextLabel", slider)
+        slider_name.Name = "slider_name"
+        slider_name.BackgroundTransparency = 1
+        slider_name.Size = UDim2.new(0.57, 0, 0.43, 0)
+        slider_name.Position = UDim2.new(0, 6, 0, 6)
+        slider_name.Font = Enum.Font.Arial
+        slider_name.Text = title or "Untitled Slider"
+        slider_name.TextColor3 = Color3.new(1, 1, 1)
+        slider_name.TextSize = 14
+        slider_name.TextXAlignment = Enum.TextXAlignment.Left
+
+        local slider_val = Instance.new("TextLabel", slider)
+        slider_val.Name = "slider_val"
+        slider_val.BackgroundTransparency = 1
+        slider_val.Size = UDim2.new(0.38, 0, 0.43, 0)
+        slider_val.Position = UDim2.new(0.63, -6, 0, 6)
+        slider_val.Font = Enum.Font.Arial
+        slider_val.TextColor3 = Color3.new(1, 1, 1)
+        slider_val.TextSize = 14
+        slider_val.TextXAlignment = Enum.TextXAlignment.Right
+
+        local sliderbtn = Instance.new("ImageButton", slider)
+        sliderbtn.Name = "sliderbtn"
+        sliderbtn.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)
+        sliderbtn.BackgroundTransparency = 0
+        sliderbtn.BorderSizePixel = 0
+        sliderbtn.Position = UDim2.new(0.04, 0, 0.66, 0)
+        sliderbtn.Size = UDim2.new(0, 237, 0, 7)
+        sliderbtn.Image = ""
+
+        local MIN_WIDTH = 5
+        local SLIDER_WIDTH = 237
+        local value = minValue
+
+        local function updateValue(sizeX)
+            local clampedX = math.clamp(sizeX, MIN_WIDTH, SLIDER_WIDTH)
+            local scaledValue = ((maxValue - minValue) / (SLIDER_WIDTH - MIN_WIDTH)) * (clampedX - MIN_WIDTH) + minValue
+            value = math.floor(scaledValue)
+            slider_val.Text = tostring(value)
+            pcall(callback, value)
+        end
+
+        local dragging = false
+        sliderbtn.MouseButton1Down:Connect(function()
+            dragging = true
+        end)
+
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                local mouseX = UserInputService:GetMouseLocation().X
+                local relativeX = mouseX - sliderbtn.AbsolutePosition.X
+                sliderbtn.Size = UDim2.new(0, math.clamp(relativeX, MIN_WIDTH, SLIDER_WIDTH), 0, 7)
+                updateValue(sliderbtn.Size.X.Offset)
+            end
+        end)
+
+        updateValue(MIN_WIDTH)
+    end
+
+    function innerTab:CreateSubDivider(name)
+        local divider = Instance.new("Frame", innerTab.tab_template)
+        divider.Name = "divider"
+        divider.BackgroundTransparency = 1
+        divider.Size = UDim2.new(0, 268, 0, 57)
+        divider.Position = UDim2.new(0, 0, 0, #innerTab.tab_template:GetChildren() * 50)
+
+        local line = Instance.new("Frame", divider)
+        line.Name = "dividerLine"
+        line.BackgroundColor3 = Color3.fromRGB(63, 63, 63)
+        line.BorderSizePixel = 0
+        line.Size = UDim2.new(0, 267, 0, 7)
+        line.Position = UDim2.new(0, 0, 0.65, 0)
+
+        local label = Instance.new("TextLabel", divider)
+        label.Name = "divider_name"
+        label.BackgroundTransparency = 1
+        label.Size = UDim2.new(1, 0, 0.58, 0)
+        label.Position = UDim2.new(0, 6, 0, 6)
+        label.Font = Enum.Font.Arial
+        label.Text = name or "Untitled Divider"
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.TextSize = 14
+        label.TextXAlignment = Enum.TextXAlignment.Left
+    end
+
+    function innerTab:CreateCheckBox(name, callback)
+        callback = callback or function() end
+
+        local checkbox = Instance.new("Frame", innerTab.tab_template)
+        checkbox.Name = "checkbox"
+        checkbox.BackgroundColor3 = Color3.fromRGB(63, 63, 63)
+        checkbox.Size = UDim2.new(0, 269, 0, 35)
+        checkbox.Position = UDim2.new(0, 0, 0, #innerTab.tab_template:GetChildren() * 50)
+        checkbox.Active = true
+
+        local label = Instance.new("TextLabel", checkbox)
+        label.Name = "checkboxname"
+        label.BackgroundTransparency = 1
+        label.Size = UDim2.new(0.78, 0, 0.67, 0)
+        label.Position = UDim2.new(0, 6, 0.17, 0)
+        label.Font = Enum.Font.Arial
+        label.Text = name or "Untitled"
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.TextSize = 14
+        label.TextXAlignment = Enum.TextXAlignment.Left
+
+        local toggler = Instance.new("ImageButton", checkbox)
+        toggler.Name = "toggler"
+        toggler.BackgroundTransparency = 1
+        toggler.Position = UDim2.new(0.92, 0, 0.29, 0)
+        toggler.Size = UDim2.new(0, 14, 0, 15)
+        toggler.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+        toggler.ImageColor3 = Color3.fromRGB(255, 79, 79)
+
+        local enabled = false
+        toggler.MouseButton1Click:Connect(function()
+            enabled = not enabled
+            local color = enabled and Color3.fromRGB(33, 149, 27) or Color3.fromRGB(255, 79, 79)
+            TweenService:Create(toggler, TweenInfo.new(0.2), {ImageColor3 = color}):Play()
+            pcall(callback, enabled)
+        end)
+    end
+
+    function innerTab:CreateButton(name, callback)
+        callback = callback or function() end
+
+        local button = Instance.new("Frame", innerTab.tab_template)
+        button.Name = "button"
+        button.BackgroundColor3 = Color3.fromRGB(63, 63, 63)
+        button.Size = UDim2.new(0, 269, 0, 35)
+        button.Position = UDim2.new(0, 0, 0, #innerTab.tab_template:GetChildren() * 50)
+        button.Active = true
+
+        local label = Instance.new("TextLabel", button)
+        label.Name = "buttonname"
+        label.BackgroundTransparency = 1
+        label.Size = UDim2.new(0.84, 0, 0.67, 0)
+        label.Position = UDim2.new(0, 6, 0.17, 0)
+        label.Font = Enum.Font.Arial
+        label.Text = name or "Blank Button"
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.TextSize = 14
+        label.TextXAlignment = Enum.TextXAlignment.Left
+
+        local btn_content = Instance.new("TextButton", button)
+        btn_content.Name = "btn_content"
+        btn_content.BackgroundTransparency = 1
+        btn_content.Size = UDim2.new(1, 0, 1, 0)
+        btn_content.Text = ""
+        btn_content.MouseButton1Click:Connect(function()
+            pcall(callback)
+        end)
+
+        button.MouseEnter:Connect(function()
+            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundTransparency = 0.5}):Play()
+        end)
+        button.MouseLeave:Connect(function()
+            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundTransparency = 0}):Play()
+        end)
+    end
+
+    return innerTab
+end
+
+-- Main API: CreateBase returns an object that can create tabs.
+function roblo_lib:CreateBase(title)
+    -- Create ScreenGui container
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = title or "UIBase"
+    screenGui.Parent = game:GetService("CoreGui")
+
+    local baseFrame = Instance.new("Frame")
+    baseFrame.Name = "BaseFrame"
+    baseFrame.Size = UDim2.new(0, 300, 0, 400)
+    baseFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
+    baseFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    baseFrame.Parent = screenGui
+
+    -- Tab buttons holder
+    local tabHolder = Instance.new("Frame")
+    tabHolder.Name = "TabHolder"
+    tabHolder.Size = UDim2.new(1, 0, 0, 50)
+    tabHolder.BackgroundTransparency = 1
+    tabHolder.Parent = baseFrame
+
+    -- Content holder
+    local contentHolder = Instance.new("Frame")
+    contentHolder.Name = "ContentHolder"
+    contentHolder.Size = UDim2.new(1, 0, 1, -50)
+    contentHolder.Position = UDim2.new(0, 0, 0, 50)
+    contentHolder.BackgroundTransparency = 1
+    contentHolder.Parent = baseFrame
+
+    -- Tab name label
+    local tabNameLabel = Instance.new("TextLabel")
+    tabNameLabel.Name = "TabName"
+    tabNameLabel.Size = UDim2.new(1, 0, 0, 30)
+    tabNameLabel.Position = UDim2.new(0, 0, 0, 0)
+    tabNameLabel.BackgroundTransparency = 1
+    tabNameLabel.Font = Enum.Font.ArialBold
+    tabNameLabel.TextSize = 18
+    tabNameLabel.TextColor3 = Color3.new(1,1,1)
+    tabNameLabel.Text = ""
+    tabNameLabel.Parent = baseFrame
+
+    -- Create the tab system instance (handles tab switching)
+    local innerTab = roblo_lib:CreateTabSystem(tabHolder, contentHolder, contentHolder, tabNameLabel)
+
+    local baseObj = {}
+
+    function baseObj:CreateTab(name)
+        -- Create tab button
+        local tabBtn = Instance.new("ImageButton")
+        tabBtn.Name = name
+        tabBtn.Size = UDim2.new(0, 100, 1, 0)
+        tabBtn.Position = UDim2.new(0, (#tabHolder:GetChildren() * 100), 0, 0)
+        tabBtn.BackgroundColor3 = Color3.fromRGB(83, 83, 83)
+        tabBtn.Parent = tabHolder
+
+        -- Create tab content frame
+        local tabContent = Instance.new("Frame")
+        tabContent.Name = name
+        tabContent.Size = UDim2.new(1, 0, 1, 0)
+        tabContent.BackgroundTransparency = 1
+        tabContent.Visible = false
+        tabContent.Parent = contentHolder
+
+        -- Connect tab button click to switch tab
+        tabBtn.MouseButton1Click:Connect(function()
+            tabBtn.BackgroundColor3 = Color3.fromRGB(63, 63, 63)
+            innerTab.tab_template = tabContent
+            -- call onTabClick indirectly by firing the event on the original system:
+            -- (hack: simulate clicking all buttons to update colors)
+            for _, btn in pairs(tabHolder:GetChildren()) do
+                if btn:IsA("ImageButton") then
+                    btn.BackgroundColor3 = Color3.fromRGB(83, 83, 83)
+                end
+            end
+            tabBtn.BackgroundColor3 = Color3.fromRGB(63, 63, 63)
+
+            for _, p in pairs(contentHolder:GetChildren()) do
+                if p:IsA("Frame") then
+                    p.Visible = false
+                end
+            end
+            tabContent.Visible = true
+            tabNameLabel.Text = name
+        end)
+
+        -- Automatically click first tab created
+        if #tabHolder:GetChildren() == 1 then
+            tabBtn:MouseButton1Click()
+        end
+
+        -- Return API to add controls inside this tab
+        local newTab = {}
+
+        local methods = {"CreateSlider", "CreateCheckBox", "CreateButton", "CreateSubDivider"}
+
+        for _, methodName in ipairs(methods) do
+            newTab[methodName] = function(self, ...)
+                innerTab.tab_template = tabContent
+                return innerTab[methodName](innerTab, ...)
+            end
+        end
+
+        return newTab
+    end
+
+    return baseObj
+end
+
+return roblo_lib
