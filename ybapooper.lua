@@ -28,7 +28,7 @@ end)
 
 local amt
 
-serverhop:CreateSlider("player amount",16,1,function(s)
+serverhop:CreateSlider("player amount",16,3,function(s)
 	amt = s 
 	--print(fart)
 end)
