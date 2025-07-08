@@ -1,0 +1,136 @@
+local roblo_lib = loadstring(game:HttpGet("https://github.com/NexityHereLol/skidware/blob/main/lib_extension"))()
+
+local zab = roblo_lib:CreateLib("YBA Client")
+
+-- Tabs (capitalized)
+local MainTab = zab:CreateTab("Storymode", "All teleport locations for storymode")
+local ExtraMapTab = zab:CreateTab("Map", "All teleport locations for map")
+local ExtraTab = zab:CreateTab("Credits", "Person who made this script")
+local ServerHopTab = zab:CreateTab("Server Hop", "In case you want to switch modes")
+
+-- Storymode teleports dropdown
+MainTab:CreateSubDivider("Storymode Teleports")
+
+local storymodeDropdown = MainTab:CreateDropDown("Storymode Teleports")
+
+local storyTeleports = {
+    ["Talk to Giorno 1"] = CFrame.new(1, 1, -705),
+    ["Talk to Koichi"] = CFrame.new(-122, 2, -463),
+    ["Talk to Giorno 2"] = CFrame.new(-390, 1, -681),
+    ["Defeat Bruno (first battle)"] = CFrame.new(-238, 23, 159),
+    ["Talk to Bruno (after battle)"] = CFrame.new(-564, -23, -193),
+    ["Talk to Giorno 3 (post battle)"] = CFrame.new(-371, 2, -122),
+    ["Talk to Fugo 1 (meet the gang)"] = CFrame.new(-328, 2, 30),
+    ["Talk to Mista 1 (meet the gang)"] = CFrame.new(150, 5, 79),
+    ["Talk to Narancia 1 (meet the gang)"] = CFrame.new(261, 7, -240),
+    ["Talk to Abbachio 1 (meet the gang)"] = CFrame.new(355, 1, -313),
+    ["Talk to Bruno 3 (begin the mission)"] = CFrame.new(410, 1, -136),
+    ["Talk to Trish (begin the mission)"] = CFrame.new(-58, -25, 593),
+    ["Train Station Teleport (for all NPC battle quests)"] = CFrame.new(-264, 1, -82),
+    ["Final Talks (1) before beating Diavolo"] = CFrame.new(579, 1, -131),
+    ["Final Talks (2) before beating Diavolo"] = CFrame.new(1144, 118, -147)
+}
+
+for name, cf in pairs(storyTeleports) do
+    storymodeDropdown:AddButton(name, function()
+        local plr = game.Players.LocalPlayer
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            plr.Character.HumanoidRootPart.CFrame = cf
+        end
+    end)
+end
+
+-- ExtraMap dropdown
+local extraMapDropdown = ExtraMapTab:CreateDropDown("Extra Map Teleports")
+
+local extraMapTeleports = {
+    ["Joe for Heaven Quest"] = CFrame.new(-242, 274, 287),
+    ["Heaven Ascension"] = CFrame.new(8568, -479, 8146)
+}
+
+for name, cf in pairs(extraMapTeleports) do
+    extraMapDropdown:AddButton(name, function()
+        local plr = game.Players.LocalPlayer
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            plr.Character.HumanoidRootPart.CFrame = cf
+        end
+    end)
+end
+
+-- Anti AFK checkbox in Extra tab
+local antiAFKEnabled = false
+ExtraTab:CreateCheckBox("Anti AFK", false, function(state)
+    antiAFKEnabled = state
+    if antiAFKEnabled then
+        local VirtualUser = game:GetService("VirtualUser")
+        game:GetService("Players").LocalPlayer.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+    end
+end)
+
+-- Server hop slider and button
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+
+local minPlayers = 3
+
+ServerHopTab:CreateSlider("Minimum Players", 3, 16, 8, function(value)
+    minPlayers = math.floor(value)
+end)
+
+ServerHopTab:CreateButton("Server Hop", function()
+    local player = Players.LocalPlayer
+    local PlaceId = game.PlaceId
+    local currentJobId = game.JobId
+    local visitedServers = {
+        [currentJobId] = true
+    }
+
+    local function serverHop()
+        local servers = {}
+        local cursor = ""
+
+        local function fetchServers()
+            local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+            if cursor and cursor ~= "" then
+                url = url .. "&cursor=" .. cursor
+            end
+
+            local success, result = pcall(function()
+                return HttpService:JSONDecode(game:HttpGet(url))
+            end)
+
+            if success and result and result.data then
+                for _, server in ipairs(result.data) do
+                    local id = server.id
+                    local playersCount = server.playing
+                    local maxPlayers = server.maxPlayers
+                    if playersCount >= minPlayers and playersCount < maxPlayers and not visitedServers[id] then
+                        table.insert(servers, id)
+                    end
+                end
+                cursor = result.nextPageCursor
+            else
+                warn("Failed to fetch server list.")
+            end
+        end
+
+        repeat
+            fetchServers()
+            task.wait(1)
+        until #servers > 0 or not cursor
+
+        if #servers > 0 then
+            local target = servers[math.random(1, #servers)]
+            visitedServers[target] = true
+            TeleportService:TeleportToPlaceInstance(PlaceId, target, player)
+        else
+            warn("No suitable servers found (players >= " .. minPlayers .. " & not visited).")
+        end
+    end
+
+    serverHop()
+end)
