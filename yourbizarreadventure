@@ -1,136 +1,149 @@
-local roblo_lib = loadstring(game:HttpGet("https://github.com/NexityHereLol/skidware/blob/main/lib_extension"))()
+-- Load the UI lib dynamically from GitHub
+local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/skidware/refs/heads/main/lib_extension.lua"))()
 
-local zab = roblo_lib:CreateLib("YBA Client")
+-- Create the interface using the loaded lib
+local int = lib:CreateInterface("Skidware: YBA", "center")
 
--- Tabs (capitalized)
-local MainTab = zab:CreateTab("Storymode", "All teleport locations for storymode")
-local ExtraMapTab = zab:CreateTab("Map", "All teleport locations for map")
-local ExtraTab = zab:CreateTab("Credits", "Person who made this script")
-local ServerHopTab = zab:CreateTab("Server Hop", "In case you want to switch modes")
+-- Tabs
+local autofarm   = int:CreateTab("Autofarm")
+local misc       = int:CreateTab("Misc")
+local serverhop  = int:CreateTab("Server(s) Hop")
+local player     = int:CreateTab("Player")
+local storymode  = int:CreateTab("Storymode TP(s)")
 
--- Storymode teleports dropdown
-MainTab:CreateSubDivider("Storymode Teleports")
+-- Autofarm Tab
+autofarm:CreateLabel("Autofarm Coming Soon...")
 
-local storymodeDropdown = MainTab:CreateDropDown("Storymode Teleports")
+-- Misc Tab
+misc:CreateButton("Misc Button 2")
 
-local storyTeleports = {
-    ["Talk to Giorno 1"] = CFrame.new(1, 1, -705),
-    ["Talk to Koichi"] = CFrame.new(-122, 2, -463),
-    ["Talk to Giorno 2"] = CFrame.new(-390, 1, -681),
-    ["Defeat Bruno (first battle)"] = CFrame.new(-238, 23, 159),
-    ["Talk to Bruno (after battle)"] = CFrame.new(-564, -23, -193),
-    ["Talk to Giorno 3 (post battle)"] = CFrame.new(-371, 2, -122),
-    ["Talk to Fugo 1 (meet the gang)"] = CFrame.new(-328, 2, 30),
-    ["Talk to Mista 1 (meet the gang)"] = CFrame.new(150, 5, 79),
-    ["Talk to Narancia 1 (meet the gang)"] = CFrame.new(261, 7, -240),
-    ["Talk to Abbachio 1 (meet the gang)"] = CFrame.new(355, 1, -313),
-    ["Talk to Bruno 3 (begin the mission)"] = CFrame.new(410, 1, -136),
-    ["Talk to Trish (begin the mission)"] = CFrame.new(-58, -25, 593),
-    ["Train Station Teleport (for all NPC battle quests)"] = CFrame.new(-264, 1, -82),
-    ["Final Talks (1) before beating Diavolo"] = CFrame.new(579, 1, -131),
-    ["Final Talks (2) before beating Diavolo"] = CFrame.new(1144, 118, -147)
-}
-
-for name, cf in pairs(storyTeleports) do
-    storymodeDropdown:AddButton(name, function()
-        local plr = game.Players.LocalPlayer
-        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            plr.Character.HumanoidRootPart.CFrame = cf
-        end
-    end)
-end
-
--- ExtraMap dropdown
-local extraMapDropdown = ExtraMapTab:CreateDropDown("Extra Map Teleports")
-
-local extraMapTeleports = {
-    ["Joe for Heaven Quest"] = CFrame.new(-242, 274, 287),
-    ["Heaven Ascension"] = CFrame.new(8568, -479, 8146)
-}
-
-for name, cf in pairs(extraMapTeleports) do
-    extraMapDropdown:AddButton(name, function()
-        local plr = game.Players.LocalPlayer
-        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            plr.Character.HumanoidRootPart.CFrame = cf
-        end
-    end)
-end
-
--- Anti AFK checkbox in Extra tab
-local antiAFKEnabled = false
-ExtraTab:CreateCheckBox("Anti AFK", false, function(state)
-    antiAFKEnabled = state
-    if antiAFKEnabled then
-        local VirtualUser = game:GetService("VirtualUser")
-        game:GetService("Players").LocalPlayer.Idled:Connect(function()
-            VirtualUser:CaptureController()
-            VirtualUser:ClickButton2(Vector2.new())
-        end)
-    end
+misc:CreateSlider("Slider", 100, 16, function(s)
+	print("Slider value:", s)
 end)
 
--- Server hop slider and button
-local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
-local Players = game:GetService("Players")
-
-local minPlayers = 3
-
-ServerHopTab:CreateSlider("Minimum Players", 3, 16, 8, function(value)
-    minPlayers = math.floor(value)
+-- ✅ Anti-AFK Toggle
+local VirtualUser = game:GetService("VirtualUser")
+misc:CreateCheckBox("Anti AFK", function(state)
+	if state then
+		game.Players.LocalPlayer.Idled:Connect(function()
+			VirtualUser:CaptureController()
+			VirtualUser:ClickButton2(Vector2.new())
+		end)
+		print("[Anti AFK] Enabled.")
+	else
+		print("[Anti AFK] Disabled.")
+	end
 end)
 
-ServerHopTab:CreateButton("Server Hop", function()
-    local player = Players.LocalPlayer
-    local PlaceId = game.PlaceId
-    local currentJobId = game.JobId
-    local visitedServers = {
-        [currentJobId] = true
-    }
+-- Server Hop Tab
+local amt = 8
 
-    local function serverHop()
-        local servers = {}
-        local cursor = ""
+serverhop:CreateSlider("Player Amount", 16, 1, function(s)
+	amt = s
+end)
 
-        local function fetchServers()
-            local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
-            if cursor and cursor ~= "" then
-                url = url .. "&cursor=" .. cursor
-            end
+serverhop:CreateButton("Server Hop (Adjust Player Amount)", function()
+	local HttpService = game:GetService("HttpService")
+	local TeleportService = game:GetService("TeleportService")
+	local Players = game:GetService("Players")
 
-            local success, result = pcall(function()
-                return HttpService:JSONDecode(game:HttpGet(url))
-            end)
+	local player = Players.LocalPlayer
+	local PlaceId = game.PlaceId
+	local currentJobId = game.JobId
+	local visitedServers = {
+		[currentJobId] = true
+	}
 
-            if success and result and result.data then
-                for _, server in ipairs(result.data) do
-                    local id = server.id
-                    local playersCount = server.playing
-                    local maxPlayers = server.maxPlayers
-                    if playersCount >= minPlayers and playersCount < maxPlayers and not visitedServers[id] then
-                        table.insert(servers, id)
-                    end
-                end
-                cursor = result.nextPageCursor
-            else
-                warn("Failed to fetch server list.")
-            end
-        end
+	local function serverHop()
+		local servers = {}
+		local cursor = ""
 
-        repeat
-            fetchServers()
-            task.wait(1)
-        until #servers > 0 or not cursor
+		local function fetchServers()
+			local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
+			if cursor and cursor ~= "" then
+				url = url .. "&cursor=" .. cursor
+			end
 
-        if #servers > 0 then
-            local target = servers[math.random(1, #servers)]
-            visitedServers[target] = true
-            TeleportService:TeleportToPlaceInstance(PlaceId, target, player)
-        else
-            warn("No suitable servers found (players >= " .. minPlayers .. " & not visited).")
-        end
-    end
+			local success, result = pcall(function()
+				return HttpService:JSONDecode(game:HttpGet(url))
+			end)
 
-    serverHop()
+			if success and result and result.data then
+				for _, server in ipairs(result.data) do
+					local id = server.id
+					local players = server.playing
+					local max = server.maxPlayers
+					if players >= amt and players < max and not visitedServers[id] then
+						table.insert(servers, id)
+					end
+				end
+				cursor = result.nextPageCursor
+			else
+				warn("[Server Hop] Failed to fetch server list.")
+			end
+		end
+
+		repeat
+			fetchServers()
+			task.wait(1)
+		until #servers > 0 or not cursor
+
+		if #servers > 0 then
+			local target = servers[math.random(1, #servers)]
+			visitedServers[target] = true
+			TeleportService:TeleportToPlaceInstance(PlaceId, target, player)
+		else
+			warn("[Server Hop] No suitable servers found (Players >= " .. amt .. ").")
+		end
+	end
+
+	serverHop()
+end)
+
+-- Storymode Teleports (Dropdown)
+local teleportData = {
+	{name = "Talk to Giorno 1", pos = Vector3.new(1, 1, -705)},
+	{name = "Talk to Koichi", pos = Vector3.new(-122, 2, -463)},
+	{name = "Talk to Giorno 2", pos = Vector3.new(-390, 1, -681)},
+	{name = "Defeat Bruno (First Battle)", pos = Vector3.new(-238, 23, 159)},
+	{name = "Talk to Bruno (After Battle)", pos = Vector3.new(-564, -23, -193)},
+	{name = "Talk to Giorno 3 (Post Battle)", pos = Vector3.new(-371, 2, -122)},
+	{name = "Talk to Fugo 1 (Meet the Gang)", pos = Vector3.new(-328, 2, 30)},
+	{name = "Talk to Mista 1 (Meet the Gang)", pos = Vector3.new(150, 5, 79)},
+	{name = "Talk to Narancia 1 (Meet the Gang)", pos = Vector3.new(261, 7, -240)},
+	{name = "Talk to Abbachio 1 (Meet the Gang)", pos = Vector3.new(355, 1, -313)},
+	{name = "Talk to Bruno 3 (Begin the Mission)", pos = Vector3.new(410, 1, -136)},
+	{name = "Talk to Trish (Begin the Mission)", pos = Vector3.new(-58, -25, 593)},
+	{name = "Train Station (For NPC Battle Quests)", pos = Vector3.new(-264, 1, -82)},
+	{name = "Final Talks (1) Before Beating Diavolo", pos = Vector3.new(579, 1, -131)},
+	{name = "Final Talks (2) Before Beating Diavolo", pos = Vector3.new(1144, 118, -147)},
+}
+
+local tpDropdown = storymode:CreateDropDown("Storymode Teleports")
+for _, data in ipairs(teleportData) do
+	tpDropdown:AddButton(data.name, function()
+		local char = game.Players.LocalPlayer.Character
+		local root = char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("Torso"))
+		if root then
+			root.CFrame = CFrame.new(data.pos)
+			print("[Teleport] Moved to:", data.name)
+		end
+	end)
+end
+
+-- Player Tab
+player:CreateCheckBox("WalkSpeed", function(enable)
+	local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+	if hum then
+		hum.WalkSpeed = enable and 100 or 16
+		print("[WalkSpeed] Set to", hum.WalkSpeed)
+	end
+end)
+
+player:CreateCheckBox("JumpPower", function(enable)
+	local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+	if hum then
+		hum.JumpPower = enable and 150 or 50
+		print("[JumpPower] Set to", hum.JumpPower)
+	end
 end)
