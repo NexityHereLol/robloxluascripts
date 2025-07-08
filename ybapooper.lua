@@ -18,6 +18,29 @@ autofarm:CreateLabel("autofarm coming soon..")
 
 -- misc page -- 
 
+local VirtualUser = game:GetService("VirtualUser")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+
+local antiAFKConnection = nil
+
+misc:CreateCheckBox("anti afk", function(enabled)
+    if enabled then
+        print("Anti-AFK activated")
+        antiAFKConnection = localPlayer.Idled:Connect(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+            print("Roblox tried to kick you but failed to do so!")
+        end)
+    else
+        print("Anti-AFK deactivated")
+        if antiAFKConnection then
+            antiAFKConnection:Disconnect()
+            antiAFKConnection = nil
+        end
+    end
+end)
+
 misc:CreateCheckBox("item esp",function(s)
     print("item esp: " .. s)
 end)
