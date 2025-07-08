@@ -630,6 +630,176 @@ function lib:CreateInterface(name, alignment)
 			return self
 		end
 
+		function innertab:CreateDropDown(name)
+			local dropdown = Instance.new("Frame")
+			dropdown.Name = "dropdown"
+			dropdown.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+			dropdown.BorderColor3 = Color3.new(0.0588235, 0.0588235, 0.0588235)
+			dropdown.ClipsDescendants = true
+			dropdown.Size = UDim2.new(0, 314, 0, 35) -- closed size
+			dropdown.BorderSizePixel = 1
+			dropdown.BorderMode = Enum.BorderMode.Inset
+			dropdown.Position = UDim2.new(0, 0, 0.53, 0)
+			dropdown.Parent = tabPage
+
+			local dropdown_title = Instance.new("TextLabel")
+			dropdown_title.Name = "dropdown_title"
+			dropdown_title.Parent = dropdown
+			dropdown_title.BackgroundTransparency = 1
+			dropdown_title.Position = UDim2.new(0, 7, 0, 11)
+			dropdown_title.Size = UDim2.new(0, 150, 0, 14)
+			dropdown_title.Font = Enum.Font.GothamBold
+			dropdown_title.Text = name or "Dropdown"
+			dropdown_title.TextColor3 = Color3.new(1, 1, 1)
+			dropdown_title.TextSize = 14
+			dropdown_title.TextXAlignment = Enum.TextXAlignment.Left
+
+			local dropdowntoggler = Instance.new("ImageButton")
+			dropdowntoggler.Name = "dropdowntoggler"
+			dropdowntoggler.Parent = dropdown
+			dropdowntoggler.BackgroundTransparency = 1
+			dropdowntoggler.Position = UDim2.new(1, -25, 0, 7)
+			dropdowntoggler.Size = UDim2.new(0, 21, 0, 21)
+			dropdowntoggler.Image = "rbxassetid://127330890338186"
+			dropdowntoggler.AutoButtonColor = false
+
+			local contentholder = Instance.new("ScrollingFrame")
+			contentholder.Name = "contentholder"
+			contentholder.Parent = dropdown
+			contentholder.Active = true
+			contentholder.BackgroundTransparency = 1
+			contentholder.BorderSizePixel = 0
+			contentholder.Position = UDim2.new(0, 10, 0, 37)
+			contentholder.Size = UDim2.new(0, 297, 0, 0)  -- start closed (height 0)
+			contentholder.BottomImage = ""  
+			contentholder.TopImage = ""     
+			contentholder.ScrollBarThickness = 7
+			contentholder.ScrollBarImageColor3 = Color3.fromRGB(180, 180, 180)
+			contentholder.ClipsDescendants = true
+			contentholder.ScrollingEnabled = true
+			contentholder.AutomaticCanvasSize = Enum.AutomaticSize.Y  -- Auto canvas size based on content
+
+			-- Important: Add a UIListLayout inside the contentholder to layout children vertically and get accurate AbsoluteContentSize
+			local UIListLayout = Instance.new("UIListLayout")
+			UIListLayout.Parent = contentholder
+			UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+			UIListLayout.Padding = UDim.new(0, 2)
+
+			-- Optional: Listen for content size changes to update scrollbar or dropdown size if needed
+			UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+				-- You can trigger a dropdown size update here if needed
+			end)
+
+
+			local TweenService = game:GetService("TweenService")
+
+			local opened = false
+			local baseHeight = 35
+			local maxDropdownHeight = 150
+
+			local function tweenRotation(guiObject, targetRotation, duration)
+				local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+				local tween = TweenService:Create(guiObject, tweenInfo, {Rotation = targetRotation})
+				tween:Play()
+				return tween
+			end
+
+			local function updateDropdownSize()
+				if opened then
+					local contentHeight = UIListLayout.AbsoluteContentSize.Y
+					local fudge = 1  -- small tweak to fix off-by-one pixel
+					local newHeight = math.min(contentHeight + fudge, maxDropdownHeight)
+
+					local dropdownNewHeight = baseHeight + newHeight
+
+					-- Tween dropdown to new height
+					dropdown:TweenSize(UDim2.new(0, 314, 0, dropdownNewHeight + 8), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+
+					-- Tween contentholder to slightly smaller height (exact height of content + fudge)
+					contentholder:TweenSize(UDim2.new(0, 297, 0, newHeight), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+
+					-- CanvasSize must be the actual content height without fudge for scrolling correctness
+					contentholder.CanvasSize = UDim2.new(0, 0, 0, contentHeight)
+
+					tweenRotation(dropdowntoggler, -90, 0.3)
+				else
+					contentholder:TweenSize(UDim2.new(0, 297, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+					dropdown:TweenSize(UDim2.new(0, 314, 0, baseHeight), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+					tweenRotation(dropdowntoggler, 0, 0.3)
+				end
+			end
+
+
+
+			dropdowntoggler.MouseButton1Click:Connect(function()
+				opened = not opened
+				updateDropdownSize()
+			end)
+
+			-- expose method to add buttons
+			local dropdownAPI = {}
+
+			function dropdownAPI:AddButton(name, callback)
+				local dropdownbtn = Instance.new("ImageButton")
+				local UICorner = Instance.new("UICorner")
+				local buttonlabelname = Instance.new("TextLabel")
+				local click = Instance.new("ImageLabel")
+
+				dropdownbtn.Name = "dropdownbtn"
+				dropdownbtn.Parent = contentholder
+				dropdownbtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+				dropdownbtn.BorderSizePixel = 0
+				dropdownbtn.Size = UDim2.new(0, 285, 0, 26)
+				dropdownbtn.AutoButtonColor = false
+				dropdownbtn.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+				dropdownbtn.ImageTransparency = 1
+
+				UICorner.Parent = dropdownbtn
+				UICorner.CornerRadius = UDim.new(0, 0)
+
+				buttonlabelname.Name = "buttonlabelname"
+				buttonlabelname.Parent = dropdownbtn
+				buttonlabelname.BackgroundColor3 = Color3.new(1, 1, 1)
+				buttonlabelname.BackgroundTransparency = 1
+				buttonlabelname.BorderSizePixel = 0
+				buttonlabelname.Position = UDim2.new(0.03, 0, 0.2, 0)
+				buttonlabelname.Size = UDim2.new(0, 150, 0, 20)
+				buttonlabelname.Font = Enum.Font.GothamBold
+				buttonlabelname.Text = name or "Button"
+				buttonlabelname.TextColor3 = Color3.new(1, 1, 1)
+				buttonlabelname.TextSize = 14
+				buttonlabelname.TextXAlignment = Enum.TextXAlignment.Left
+
+				click.Name = "click"
+				click.Parent = dropdownbtn
+				click.BackgroundTransparency = 1
+				click.BorderSizePixel = 0
+				click.Position = UDim2.new(0.905, 0, 0.2, 0)
+				click.Size = UDim2.new(0, 22, 0, 21)
+				click.Image = "rbxassetid://119676416425308"
+
+				dropdownbtn.MouseButton1Click:Connect(function()
+					if callback then
+						pcall(callback)
+					end
+				end)
+
+				dropdownbtn.MouseEnter:Connect(function()
+					TweenService:Create(dropdownbtn, TweenInfo.new(0.15), {BackgroundTransparency = 0.5}):Play()
+				end)
+
+				dropdownbtn.MouseLeave:Connect(function()
+					TweenService:Create(dropdownbtn, TweenInfo.new(0.15), {BackgroundTransparency = 0}):Play()
+				end)
+
+				return dropdownbtn
+			end
+
+			return dropdownAPI
+		end
+
+
+
 		function innertab:CreateLabel(name)
 			
 			local tabtitleframe = Instance.new("Frame")
