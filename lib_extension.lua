@@ -809,8 +809,8 @@ function lib:CreateInterface(name, alignment)
 
 			tabtitleframe.Name = "tabtitleframe"
 			tabtitleframe.Parent = tabPage
-			tabtitleframe.BackgroundColor3 = Color3.new(0.0588235, 0.0588235, 0.0588235)
-			tabtitleframe.BackgroundTransparency = 1
+			tabtitleframe.BackgroundColor3 = Color3.fromRGB(25,25,25)
+			tabtitleframe.BackgroundTransparency = 0
 			tabtitleframe.BorderColor3 = Color3.new(0, 0, 0)
 			tabtitleframe.BorderSizePixel = 0
 			tabtitleframe.Size = UDim2.new(0, 314, 0, 37)
