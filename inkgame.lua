@@ -287,18 +287,17 @@ end
 
 -- Ordered list of story-related teleports
 local storyCoords = {
-    { "[after games] chill here1", "81, 54, -88"},
-    { "[after games] chill here2", "197, 123, -186"},
+    { "[safe space] safe space", "197, 123, -186"},
     { "[1st game] beat first game", "-46, 1025, 137" },
-    { "[1st game] tp back beginning", "-51, 1032, -558"},
-    { "[1st game] tp house", "-212, 1061, 132" },
-    { "[1st game] tp house 2", "110, 1060, 119" },
-    { "[1st game] tp tree top", "-42, 1092, 126" },
-    { "[after 1st] taking photo", "-209, 187, 339" },
-    { "[after 1st] after taking photo", "-234, 232, 408" },
-    { "[2nd game] hide n seek escape", "55, 1053, 67"},
+  --  { "[1st game] tp back beginning", "-51, 1032, -558"},
+  --  { "[1st game] tp house", "-212, 1061, 132" },
+  --  { "[1st game] tp house 2", "110, 1060, 119" },
+  --  { "[1st game] tp tree top", "-42, 1092, 126" },
+  --  { "[after 1st] taking photo", "-209, 187, 339" },
+  --  { "[after 1st] after taking photo", "-234, 232, 408" },
+  --  { "[2nd game] hide n seek escape", "55, 1053, 67"},
     { "[pvp] lights out safespace", "197, 91, -91" },
-    { "[glass game] glass space", "-207, 522, -1534" },
+    { "[glass game] glass ending", "-207, 522, -1534" },
 }
 
 -- Create dropdown for story teleports
@@ -322,7 +321,7 @@ local RunService = game:GetService("RunService")
 local checkRadius = 25 -- Radius in studs to check for nearby players
 local tweenTime = 0.001 -- Time in seconds for fast tweening to the target player
 local orbitRadius = 3 -- Radius of the orbit
-local orbitSpeed = 500 -- Orbit speed in degrees per second
+local orbitSpeed = 10000 -- Orbit speed in degrees per second
 
 -- Initialize global control variable
 _G.spam = false -- Default to false to prevent initial execution
@@ -465,6 +464,86 @@ local function checkAndOrbit()
     end
 end
 
+-- auto trace
+
+misc:CreateButton("Auto Beat Dalgona", function()
+    local Players = game:GetService("Players")
+    local camera = workspace.CurrentCamera
+    local vim = game:GetService("VirtualInputManager")
+
+    local player = Players.LocalPlayer
+    local outlinesFolder = workspace.Effects
+    local outlinesNames = {
+        "UmbrellaOutline",
+        "CircleOutline",
+        "TriangleOutline",
+        "MonalisaOutline",
+        "SackBoyOutline",
+        "StarOutline"
+    }
+
+    local traceSpeed = 0.02 -- speed between parts
+    local clickRepeats = 3   -- clicks per part
+    local clickGap = 0   -- speed between repeated clicks
+
+    local function worldToScreenPoint(worldPos)
+        local screenPoint, onScreen = camera:WorldToViewportPoint(worldPos)
+        return Vector2.new(screenPoint.X, screenPoint.Y), onScreen
+    end
+
+    local function getSortedParts(model)
+        local parts = {}
+        for _, obj in ipairs(model:GetChildren()) do
+            if obj:IsA("BasePart") then
+                table.insert(parts, obj)
+            end
+        end
+        table.sort(parts, function(a, b)
+            return a.Name < b.Name
+        end)
+        return parts
+    end
+
+    local function clickAtScreenPos(pos2d)
+        for i = 1, clickRepeats do
+            vim:SendMouseButtonEvent(pos2d.X, pos2d.Y, 0, true, game, 0)
+            wait(clickGap)
+            vim:SendMouseButtonEvent(pos2d.X, pos2d.Y, 0, false, game, 0)
+            print(("[AutoTrace] Click %d at (%.2f, %.2f)"):format(i, pos2d.X, pos2d.Y))
+        end
+    end
+
+    local function traceModel(model)
+        local parts = getSortedParts(model)
+        for _, part in ipairs(parts) do
+            local screenPos, onScreen = worldToScreenPoint(part.Position)
+            if onScreen then
+                clickAtScreenPos(screenPos)
+                wait(traceSpeed)
+            else
+                print("[AutoTrace] Skipped offscreen part:", part.Name)
+            end
+        end
+    end
+
+    print("[AutoTrace] Starting...")
+
+    for _, outlineName in ipairs(outlinesNames) do
+        local model = outlinesFolder:FindFirstChild(outlineName)
+        if model and model:IsA("Model") then
+            print("[AutoTrace] Tracing:", outlineName)
+            traceModel(model)
+        else
+            warn("[AutoTrace] Not found:", outlineName)
+        end
+    end
+
+    print("[AutoTrace] Done.")
+end)
+
+-- auto trace
+
+
 -- Checkbox to toggle killaura with conditional team check
 misc:CreateCheckBox("killaura (team check if available)", function(state)
     _G.spam = state
@@ -480,6 +559,51 @@ end)
 
 
 -- kill aura
+
+-- hitbox
+
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+
+local toggle = false
+local size = 5 -- fixed hitbox size
+
+misc:CreateCheckBox("Toggle Hitbox Extender", function(state)
+    toggle = state
+    if not toggle then
+        -- Reset all players when disabled
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= plr and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = player.Character.HumanoidRootPart
+                hrp.Size = Vector3.new(2, 2, 1) -- default size, adjust if your game uses something else
+                hrp.Transparency = 0
+                hrp.BrickColor = BrickColor.new("Medium stone grey")
+                hrp.Material = Enum.Material.Plastic
+                hrp.CanCollide = true
+            end
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if toggle then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= plr and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = player.Character.HumanoidRootPart
+                hrp.Size = Vector3.new(size, size, size)
+                hrp.Transparency = 0.7
+                hrp.BrickColor = BrickColor.new("Really black")
+                hrp.Material = Enum.Material.Neon
+                hrp.CanCollide = false
+            end
+        end
+    end
+end)
+
+
+-- hitbox
+
 
 -- extra scripts
 
