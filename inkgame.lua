@@ -483,7 +483,7 @@ misc:CreateButton("Auto Beat Dalgona", function()
     }
 
     local traceSpeed = 0.02 -- speed between parts
-    local clickRepeats = 3   -- clicks per part
+    local clickRepeats = 10   -- clicks per part
     local clickGap = 0   -- speed between repeated clicks
 
     local function worldToScreenPoint(worldPos)
