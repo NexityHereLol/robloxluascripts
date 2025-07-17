@@ -321,7 +321,7 @@ local RunService = game:GetService("RunService")
 local checkRadius = 25 -- Radius in studs to check for nearby players
 local tweenTime = 0.001 -- Time in seconds for fast tweening to the target player
 local orbitRadius = 3 -- Radius of the orbit
-local orbitSpeed = 10000 -- Orbit speed in degrees per second
+local orbitSpeed = 1000 -- Orbit speed in degrees per second
 
 -- Initialize global control variable
 _G.spam = false -- Default to false to prevent initial execution
