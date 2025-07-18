@@ -1,5 +1,5 @@
 local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/skidware/refs/heads/main/lib_extension.lua"))()
-local int = lib:CreateInterface("HongSengYongFromDaSquidGame🦑", "center")
+local int = lib:CreateInterface("ink🦑: " .. tostring(game.Players.LocalPlayer), "center")
 local plr = int:CreateTab("player")
 local misc = int:CreateTab("misc")
 local Players = game:GetService("Players")
