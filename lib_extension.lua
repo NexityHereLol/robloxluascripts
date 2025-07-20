@@ -33,7 +33,8 @@ function lib:CreateInterface(name, alignment)
 
 	--local client = Instance.new("ScreenGui")
 	client.Name = "client"
-	client.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	--client.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	client.ZIndexBehavior = Enum.ZIndexBehavior.Global
 	client.IgnoreGuiInset = false
 	client.ResetOnSpawn = false
 	
