@@ -25,11 +25,20 @@ function lib:CreateInterface(name, alignment)
 	local navigation = Instance.new("Frame")
 
 	-- Setup ScreenGui
+	--client.Name = "client"
+	--client.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+	--client.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	--client.IgnoreGuiInset = false
+	--client.ResetOnSpawn = false
+
+	--local client = Instance.new("ScreenGui")
 	client.Name = "client"
-	client.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 	client.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	client.IgnoreGuiInset = false
 	client.ResetOnSpawn = false
+	
+	-- Parent to CoreGui
+	client.Parent = game:GetService("CoreGui")
 	
 	-- Setup Topbar
 	topbar.Name = "topbar"
