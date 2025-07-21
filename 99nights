@@ -1,0 +1,387 @@
+local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/skidware/refs/heads/main/lib_extension.lua"))()
+local int = lib:CreateInterface("99 nights: " .. tostring(game.Players.LocalPlayer), "center")
+local main = int:CreateTab("Main")
+local plr = int:CreateTab("Player")
+local vis = int:CreateTab("Visuals")
+local misc = int:CreateTab("Misc")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+-- === Main Configurations === 
+
+main:CreateCheckBox("Item ESP", function(state)
+    local itemFolder = workspace:FindFirstChild("Items")
+    if not itemFolder then
+        warn("workspace.Items folder not found")
+        return
+    end
+
+    local itemNames = {
+        ["Revolver"] = true, ["Medit"] = true, ["Alien Chest"] = true, ["Berry"] = true,
+        ["Bolt"] = true, ["Broken Fan"] = true, ["Carrot"] = true, ["Coal"] = true,
+        ["Coin Stack"] = true, ["Hologram Emitter"] = true, ["Item Chest"] = true,
+        ["Laser Fence Blueprint"] = true, ["Log"] = true, ["Old Flashlight"] = true,
+        ["Old Radio"] = true, ["Sheet Metal"] = true, ["Bandage"] = true, ["Rifle"] = true
+    }
+
+    local connections = {}
+
+    local function createESP(model)
+        if not model:IsA("Model") or not itemNames[model.Name] then return end
+        if not model.PrimaryPart or model:FindFirstChild("ESP") then return end
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "ESP"
+        billboard.Size = UDim2.new(0, 100, 0, 30)
+        billboard.Adornee = model.PrimaryPart
+        billboard.AlwaysOnTop = true
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
+
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = model.Name
+        label.TextColor3 = Color3.fromRGB(0, 255, 0)
+        label.TextStrokeTransparency = 0.5
+        label.TextScaled = true
+        label.Font = Enum.Font.SourceSansBold
+        label.Parent = billboard
+
+        billboard.Parent = model
+    end
+
+    local function removeAllESP()
+        for _, model in itemFolder:GetChildren() do
+            local esp = model:FindFirstChild("ESP")
+            if esp then esp:Destroy() end
+        end
+    end
+
+    if state then
+        -- Create ESPs for all current items
+        for _, model in itemFolder:GetChildren() do
+            createESP(model)
+        end
+
+        -- Add ESPs for any new items added
+        local connection = itemFolder.ChildAdded:Connect(function(model)
+            if model:IsA("Model") and itemNames[model.Name] then
+                model:GetPropertyChangedSignal("PrimaryPart"):Wait()
+                createESP(model)
+            end
+        end)
+
+        table.insert(connections, connection)
+    else
+        -- Disable ESPs
+        removeAllESP()
+
+        -- Disconnect any listeners
+        for _, conn in connections do
+            if conn.Disconnect then conn:Disconnect() end
+        end
+        table.clear(connections)
+    end
+end)
+
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+local itemFolder = workspace:FindFirstChild("Items")
+if not itemFolder then
+    warn("workspace.Items folder not found")
+    return
+end
+
+local dropdown = main:CreateDropDown("Teleport to Item")
+
+-- Clear existing buttons if any (optional)
+dropdown:ClearAllButtons()
+
+for _, itemModel in pairs(itemFolder:GetChildren()) do
+    if itemModel:IsA("Model") and itemModel.PrimaryPart then
+        local itemName = itemModel.Name
+        dropdown:AddButton("TP to " .. itemName, function()
+            if humanoidRootPart and itemModel.PrimaryPart then
+                humanoidRootPart.CFrame = itemModel.PrimaryPart.CFrame + Vector3.new(0, 5, 0)  -- Teleport 5 studs above item
+            end
+        end)
+    end
+end
+
+
+-- === Player Sliders ===
+
+-- JumpPower Slider
+plr:CreateSlider("jumppower", 500, 50, function(value)
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("Humanoid") then
+        char.Humanoid.JumpPower = value
+    end
+end)
+
+-- WalkSpeed Slider with Persistent Behavior
+plr:CreateSlider("walkspeed", 500, 16, function(value)
+    _G.HackedWalkSpeed = value
+
+    local function applyWalkSpeed(humanoid)
+        if humanoid then
+            humanoid.WalkSpeed = _G.HackedWalkSpeed
+            humanoid.Changed:Connect(function(property)
+                if property == "WalkSpeed" and humanoid.WalkSpeed ~= _G.HackedWalkSpeed then
+                    humanoid.WalkSpeed = _G.HackedWalkSpeed
+                end
+            end)
+        end
+    end
+
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        applyWalkSpeed(LocalPlayer.Character.Humanoid)
+    end
+
+    LocalPlayer.CharacterAdded:Connect(function(char)
+        char:WaitForChild("Humanoid")
+        applyWalkSpeed(char:FindFirstChild("Humanoid"))
+    end)
+end)
+
+plr:CreateCheckBox("walkspeed toggle (50)",function(toggle)
+    if toggle == true then 
+    _G.HackedWalkSpeed = 50
+        else
+    _G.HackedWalkSpeed = 16
+    end
+
+    local function applyWalkSpeed(humanoid)
+        if humanoid then
+            humanoid.WalkSpeed = _G.HackedWalkSpeed
+            humanoid.Changed:Connect(function(property)
+                if property == "WalkSpeed" and humanoid.WalkSpeed ~= _G.HackedWalkSpeed then
+                    humanoid.WalkSpeed = _G.HackedWalkSpeed
+                end
+            end)
+        end
+    end
+
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        applyWalkSpeed(LocalPlayer.Character.Humanoid)
+    end
+
+    LocalPlayer.CharacterAdded:Connect(function(char)
+        char:WaitForChild("Humanoid")
+        applyWalkSpeed(char:FindFirstChild("Humanoid"))
+    end)
+end)
+
+--// SERVICES
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+
+--// CONFIG
+local espTransparency = 0.4
+local teamCheck = true
+
+--// CUSTOM FONT
+local customFont = Font.new("rbxassetid://16658246179", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+
+--// STATE
+local BillboardESPs = {}
+local ChamsESPs = {}
+local ESPConnections = {}
+
+local ESPEnabled = false
+local ChamsEnabled = false
+
+--// HELPERS
+local function round(num, decimals)
+	return tonumber(string.format("%." .. (decimals or 0) .. "f", num))
+end
+
+local function getRoot(char)
+	return char and char:FindFirstChild("HumanoidRootPart")
+end
+
+--// BILLBOARD ESP
+local function createBillboardESP(plr)
+	if BillboardESPs[plr] or plr == LocalPlayer then return end
+	if not plr.Character or not plr.Character:FindFirstChild("Head") then return end
+
+	local gui = Instance.new("BillboardGui")
+	gui.Name = "Billboard_ESP"
+	gui.Adornee = plr.Character.Head
+	gui.Parent = plr.Character.Head
+	gui.Size = UDim2.new(0, 100, 0, 40)
+	gui.AlwaysOnTop = true
+	gui.StudsOffset = Vector3.new(0, 2, 0)
+
+	local label = Instance.new("TextLabel", gui)
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.TextStrokeTransparency = 0.5
+	label.TextScaled = true
+	label.FontFace = customFont
+
+	local conn
+	conn = RunService.RenderStepped:Connect(function()
+		if not plr.Character or not plr.Character:FindFirstChild("Humanoid") then
+			gui:Destroy()
+			if conn then conn:Disconnect() end
+			BillboardESPs[plr] = nil
+			ESPConnections[plr] = nil
+			return
+		end
+
+		local hp = math.floor(plr.Character.Humanoid.Health / plr.Character.Humanoid.MaxHealth * 100)
+		label.Text = plr.Name .. " | " .. hp .. "%"
+	end)
+
+	BillboardESPs[plr] = gui
+	ESPConnections[plr] = conn
+end
+
+--// CHAMS ESP (BoxHandleAdornment)
+local function createChamsESP(plr)
+	if ChamsESPs[plr] or plr == LocalPlayer then return end
+	if not plr.Character or not getRoot(plr.Character) then return end
+
+	local folder = Instance.new("Folder")
+	folder.Name = "Chams_ESP"
+	folder.Parent = CoreGui
+	ChamsESPs[plr] = folder
+
+	for _, part in pairs(plr.Character:GetChildren()) do
+		if part:IsA("BasePart") then
+			local box = Instance.new("BoxHandleAdornment")
+			box.Name = "Cham_" .. plr.Name
+			box.Adornee = part
+			box.AlwaysOnTop = true
+			box.ZIndex = 10
+			box.Size = part.Size
+			box.Transparency = espTransparency
+			box.Color = BrickColor.new(
+				teamCheck and (plr.TeamColor == LocalPlayer.TeamColor and "Bright green" or "Bright red") or tostring(plr.TeamColor)
+			)
+			box.Parent = folder
+		end
+	end
+end
+
+--// CLEANUP FUNCTIONS
+local function cleanupBillboardESP()
+	for _, gui in pairs(BillboardESPs) do
+		if gui then gui:Destroy() end
+	end
+	for _, conn in pairs(ESPConnections) do
+		if conn then conn:Disconnect() end
+	end
+	BillboardESPs = {}
+	ESPConnections = {}
+end
+
+local function cleanupChamsESP()
+	for _, folder in pairs(ChamsESPs) do
+		if folder then folder:Destroy() end
+	end
+	ChamsESPs = {}
+end
+
+--// INITIALIZATION HANDLER
+local function handlePlayerESP(plr)
+	if ESPEnabled then createBillboardESP(plr) end
+	if ChamsEnabled then createChamsESP(plr) end
+
+	plr.CharacterAdded:Connect(function()
+		task.wait(1)
+		if ESPEnabled then createBillboardESP(plr) end
+		if ChamsEnabled then createChamsESP(plr) end
+	end)
+end
+
+--// GUI TOGGLES (INTEGRATE INTO YOUR UI)
+vis:CreateCheckBox("ESP", function(state)
+	ESPEnabled = state
+	if not state then
+		cleanupBillboardESP()
+	else
+		for _, plr in pairs(Players:GetPlayers()) do
+			if plr ~= LocalPlayer then
+				createBillboardESP(plr)
+			end
+		end
+	end
+end)
+
+vis:CreateCheckBox("Chams", function(state)
+	ChamsEnabled = state
+	if not state then
+		cleanupChamsESP()
+	else
+		for _, plr in pairs(Players:GetPlayers()) do
+			if plr ~= LocalPlayer then
+				createChamsESP(plr)
+			end
+		end
+	end
+end)
+
+--// INIT ON CURRENT PLAYERS
+for _, plr in pairs(Players:GetPlayers()) do
+	if plr ~= LocalPlayer then
+		handlePlayerESP(plr)
+	end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+	handlePlayerESP(plr)
+end)
+
+--// FOV CIRCLE
+local FOVCircle = Drawing.new("Circle")
+FOVCircle.Visible = false
+FOVCircle.Color = Color3.fromRGB(255, 255, 255)
+FOVCircle.Transparency = 1
+FOVCircle.Thickness = 1
+FOVCircle.Filled = false
+FOVCircle.ZIndex = 2
+
+local FOVRadius = 100
+
+RunService.RenderStepped:Connect(function()
+	if FOVCircle.Visible then
+		FOVCircle.Radius = FOVRadius
+		FOVCircle.Position = UserInputService:GetMouseLocation()
+	end
+end)
+
+vis:CreateCheckBox("FOV Circle", function(state)
+	FOVCircle.Visible = state
+end)
+
+
+-- extra scripts
+
+local civDropdown2 = misc:CreateDropDown("Extra Scripts", function() end)
+
+civDropdown2:AddButton("infinite yield",function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
+
+civDropdown2:AddButton("turtle spy",function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Brand/Turtle-Spy/main/source.lua", true))()
+end)
+
+civDropdown2:AddButton("ink game 2 (extra script)",function()
+    loadstring(game:HttpGet('https://api.exploitingis.fun/loader', true))()
+end)
+
+
+-- extra scripts
+
