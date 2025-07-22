@@ -26,7 +26,7 @@ baseplate.Color = Color3.fromRGB(255, 255, 255)
 baseplate.Parent = workspace
 
 -- Checkbox to toggle visibility
-main:CreateCheckBox("Show Safe Zone", true, function(enabled)
+main:CreateCheckBox("Show Safe Zone", function(enabled)
 	baseplate.Transparency = enabled and 0.5 or 1
 	baseplate.CanCollide = enabled
 end)
