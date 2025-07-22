@@ -1,5 +1,5 @@
 local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/skidware/refs/heads/main/lib_extension.lua"))()
-local int = lib:CreateInterface("99 nights: " .. tostring(game.Players.LocalPlayer), "center")
+local int = lib:CreateInterface("userscript: " .. tostring(game.Players.LocalPlayer), "center")
 local main = int:CreateTab("Main")
 local plr = int:CreateTab("Player")
 local vis = int:CreateTab("Visuals")
@@ -8,7 +8,12 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
 
+
 -- === Main Configurations === 
+
+main:CreateButton("TP to CampSite",function()
+	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(0, 8, -0)
+end)
 
 main:CreateCheckBox("Item ESP", function(state)
     local itemFolder = workspace:FindFirstChild("Items")
@@ -18,7 +23,7 @@ main:CreateCheckBox("Item ESP", function(state)
     end
 
     local itemNames = {
-        ["Revolver"] = true, ["Medit"] = true, ["Alien Chest"] = true, ["Berry"] = true,
+        ["Revolver"] = true, ["Bunny Foot"] = true,["MedKit"] = true, ["Alien Chest"] = true, ["Berry"] = true,
         ["Bolt"] = true, ["Broken Fan"] = true, ["Carrot"] = true, ["Coal"] = true,
         ["Coin Stack"] = true, ["Hologram Emitter"] = true, ["Item Chest"] = true,
         ["Laser Fence Blueprint"] = true, ["Log"] = true, ["Old Flashlight"] = true,
@@ -37,15 +42,15 @@ main:CreateCheckBox("Item ESP", function(state)
         billboard.Adornee = model.PrimaryPart
         billboard.AlwaysOnTop = true
         billboard.StudsOffset = Vector3.new(0, 3, 0)
-
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, 0, 1, 0)
-        label.BackgroundTransparency = 1
-        label.Text = model.Name
-        label.TextColor3 = Color3.fromRGB(0, 255, 0)
-        label.TextStrokeTransparency = 0.5
-        label.TextScaled = true
-        label.Font = Enum.Font.SourceSansBold
+	
+	local customFont = Font.new("rbxassetid://16658246179", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 1, 0)
+	label.BackgroundTransparency = 1
+	label.TextColor3 = Color3.new(1, 1, 1)
+	label.TextStrokeTransparency = 0.5
+	label.TextScaled = true
+	label.FontFace = customFont
         label.Parent = billboard
 
         billboard.Parent = model
@@ -85,32 +90,181 @@ main:CreateCheckBox("Item ESP", function(state)
     end
 end)
 
+-- tp to item
+
+
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
-local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
-local itemFolder = workspace:FindFirstChild("Items")
-if not itemFolder then
-    warn("workspace.Items folder not found")
-    return
+local itemFolder = workspace:WaitForChild("Items")
+
+local itemNames = {
+    "Revolver", "Medkit", "Alien Chest", "Berry", "Bolt", "Broken Fan",
+    "Carrot", "Coal", "Coin Stack", "Hologram Emitter", "Item Chest",
+    "Laser Fence Blueprint", "Log", "Old Flashlight", "Old Radio",
+    "Sheet Metal", "Bandage", "Rifle"
+}
+
+local function getModelPart(model)
+    if model.PrimaryPart then
+        return model.PrimaryPart
+    end
+    for _, part in pairs(model:GetChildren()) do
+        if part:IsA("BasePart") then
+            return part
+        end
+    end
+    return nil
 end
 
 local dropdown = main:CreateDropDown("Teleport to Item")
 
--- Clear existing buttons if any (optional)
-dropdown:ClearAllButtons()
-
-for _, itemModel in pairs(itemFolder:GetChildren()) do
-    if itemModel:IsA("Model") and itemModel.PrimaryPart then
-        local itemName = itemModel.Name
-        dropdown:AddButton("TP to " .. itemName, function()
-            if humanoidRootPart and itemModel.PrimaryPart then
-                humanoidRootPart.CFrame = itemModel.PrimaryPart.CFrame + Vector3.new(0, 5, 0)  -- Teleport 5 studs above item
+for _, itemName in ipairs(itemNames) do
+    dropdown:AddButton("TP to " .. itemName, function()
+        -- Find all models with this name inside Items folder
+        local candidates = {}
+        for _, model in pairs(itemFolder:GetChildren()) do
+            if model:IsA("Model") and model.Name == itemName then
+                local part = getModelPart(model)
+                if part then
+                    table.insert(candidates, part)
+                end
             end
-        end)
+        end
+
+        if #candidates == 0 then
+            warn("No '" .. itemName .. "' found to teleport to.")
+            return
+        end
+
+        -- Pick a random part and teleport
+        local targetPart = candidates[math.random(1, #candidates)]
+        local character = localPlayer.Character
+        if character then
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.CFrame = targetPart.CFrame + Vector3.new(0, 5, 0)
+            end
+        end
+    end)
+end
+
+
+
+-- tp to item
+
+
+
+
+-- tp item to you  
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+local itemsFolder = workspace:WaitForChild("Items")
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+
+local possibleItems = {
+    "Alien Chest",
+    "Alpha Wolf Pelt",
+    "Anvil Front",
+    "Apple",
+    "Bandage",
+    "Bear Corpse",
+    "Bear Pelt",
+    "Berry",
+    "Bolt",
+    "Broken Fan",
+    "Bunny Foot",
+    "Carrot",
+    "Coal",
+    "Coin Stack",
+    "Cooked Morsel",
+    "Cooked Steak",
+    "Cultist",
+    "Hologram Emitter",
+    "Item Chest",
+    "Laser Fence Blueprint",
+    "Leather Body",
+    "Log",
+    "LostChild",
+    "LostChild2",
+    "LostChild3",
+    "LostChild4",
+    "MedKit",
+    "Morsel",
+    "Old Flashlight",
+    "Old Radio",
+    "Rifle",
+    "Rifle Ammo",
+    "Revolver",
+    "Revolver Ammo",
+    "Sapling",
+    "Sheet Metal",
+    "Steak",
+    "Wolf Pelt"
+}
+
+local bringitemtoyou = main:CreateDropDown("Teleport Item:")
+
+local function teleportItem(itemName)
+    local stackOffsetY = 2 -- Height between stacked items
+    local count = 0
+
+    for _, item in ipairs(itemsFolder:GetChildren()) do
+        if item.Name == itemName then
+            local targetPart = nil
+
+            if itemName == "Berry" then
+                targetPart = item:FindFirstChild("Handle")
+                if not targetPart then
+                    for _, child in ipairs(item:GetDescendants()) do
+                        if child:IsA("MeshPart") or child:IsA("Part") or child:IsA("UnionOperation") then
+                            targetPart = child
+                            break
+                        end
+                    end
+                end
+            else
+                for _, child in ipairs(item:GetDescendants()) do
+                    if child:IsA("MeshPart") or child:IsA("Part") then
+                        targetPart = child
+                        break
+                    end
+                end
+            end
+
+            if targetPart then
+                remoteEvents.RequestStartDraggingItem:FireServer(item)
+
+                -- Stack vertically at player's position
+                local offset = Vector3.new(0, count * stackOffsetY, 0)
+                targetPart.CFrame = rootPart.CFrame + offset
+
+                remoteEvents.StopDraggingItem:FireServer(item)
+                print("Moved", itemName, ":", item:GetFullName())
+
+                count = count + 1
+            else
+                warn(itemName .. " found, but no MeshPart or Part inside:", item:GetFullName())
+            end
+        end
     end
 end
+
+for _, itemName in ipairs(possibleItems) do
+    bringitemtoyou:AddButton(itemName, function()
+        teleportItem(itemName)
+    end)
+end
+
+
+-- tp item to you 
+
+
 
 
 -- === Player Sliders ===
@@ -384,4 +538,107 @@ end)
 
 
 -- extra scripts
+
+
+-- loop distance
+
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
+local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local player = Players.LocalPlayer
+
+local killAuraToggle = false
+local radius = 200
+
+-- Supported tools and their damage IDs
+local toolsDamageIDs = {
+    ["Old Axe"] = "1_8982038982",
+    ["Good Axe"] = "112_8982038982",
+    ["Strong Axe"] = "116_8982038982" 
+}
+
+-- Try to find any supported tool in inventory with damageID
+local function getAnyToolWithDamageID()
+    for toolName, damageID in pairs(toolsDamageIDs) do
+        local tool = player.Inventory:FindFirstChild(toolName)
+        if tool then
+            return tool, damageID
+        end
+    end
+    return nil, nil
+end
+
+-- Equip a given tool
+local function equipTool(tool)
+    if tool then
+        RemoteEvents.EquipItemHandle:FireServer("FireAllClients", tool)
+    end
+end
+
+-- Unequip a given tool
+local function unequipTool(tool)
+    if tool then
+        RemoteEvents.UnequipItemHandle:FireServer("FireAllClients", tool)
+    end
+end
+
+-- Kill Aura main loop
+local function killAuraLoop()
+    while killAuraToggle do
+        local character = player.Character or player.CharacterAdded:Wait()
+        local hrp = character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            local tool, damageID = getAnyToolWithDamageID()
+            if tool and damageID then
+                equipTool(tool)
+
+                for _, mob in ipairs(Workspace.Characters:GetChildren()) do
+                    if mob:IsA("Model") then
+                        local part = mob:FindFirstChildWhichIsA("BasePart")
+                        if part and (part.Position - hrp.Position).Magnitude <= radius then
+                            pcall(function()
+                                RemoteEvents.ToolDamageObject:InvokeServer(
+                                    mob,
+                                    tool,
+                                    damageID,
+                                    CFrame.new(part.Position)
+                                )
+                            end)
+                        end
+                    end
+                end
+
+                task.wait(0.1)
+            else
+                warn("No supported tool found in inventory")
+                task.wait(1)
+            end
+        else
+            task.wait(0.5)
+        end
+    end
+end
+
+-- UI checkbox toggle
+main:CreateCheckBox("Kill Aura", function(state)
+    killAuraToggle = state
+    if state then
+        task.spawn(killAuraLoop)
+    else
+        local tool, _ = getAnyToolWithDamageID()
+        unequipTool(tool)
+    end
+end)
+
+-- UI slider for radius, with clamping and updating
+main:CreateSlider("Kill Aura Radius", 500, 20, function(value)
+    radius = math.clamp(value, 20, 500)
+end)
+
+
+-- loop distance
+
 
