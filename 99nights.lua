@@ -35,18 +35,47 @@ main:CreateCheckBox("Show Safe Zone", function(enabled)
 	baseplate.CanCollide = enabled
 end)
 
--- Button to teleport player to the safe zone
-main:CreateButton("Teleport to Safe Zone", function()
-	local character = player.Character
-	if character and character:FindFirstChild("HumanoidRootPart") then
-		character.HumanoidRootPart.CFrame = CFrame.new(baseplate.Position + Vector3.new(0, 3, 0))
-	end
-end)
+-- Utility to convert "x, y, z" string to CFrame
+local function stringToCFrame(str)
+    local x, y, z = str:match("([^,]+),%s*([^,]+),%s*([^,]+)")
+    return CFrame.new(tonumber(x), tonumber(y), tonumber(z))
+end
+
+-- Teleport function with optional tween duration
+local function teleportToTarget(cf, duration)
+    local char = game.Players.LocalPlayer.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    if duration and duration > 0 then
+        local ts = game:GetService("TweenService")
+        local info = TweenInfo.new(duration, Enum.EasingStyle.Linear)
+        local goal = { CFrame = cf }
+        local tween = ts:Create(hrp, info, goal)
+        tween:Play()
+    else
+        hrp.CFrame = cf
+    end
+end
 
 
-main:CreateButton("TP to CampSite",function()
-	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(0, 8, -0)
-end)
+local storyCoords = {
+    { "[campsite] camp site", "0, 8, -0"},
+    { "[safezone] safe zone", "0, 41, -0" },
+    { "[stronghold] strong zone", "546, 4, 263"}
+}
+
+local storyDropdown = main:CreateDropDown("Teleports")
+
+-- Create dropdown for story teleports
+for _, entry in ipairs(storyCoords) do
+    local name, coord = entry[1], entry[2]
+    storyDropdown:AddButton(name, function()
+        teleportToTarget(stringToCFrame(coord), 0.1)
+    end)
+end
+
 
 main:CreateCheckBox("Item ESP", function(state)
     local itemFolder = workspace:FindFirstChild("Items")
@@ -213,6 +242,7 @@ local possibleItems = {
     "Bear Corpse",
     "Bear Pelt",
     "Berry",
+    "Biofuel",
     "Bolt",
     "Broken Fan",
     "Bunny Foot",
@@ -222,6 +252,7 @@ local possibleItems = {
     "Cooked Morsel",
     "Cooked Steak",
     "Cultist",
+    "Flower",
     "Hologram Emitter",
     "Item Chest",
     "Laser Fence Blueprint",
