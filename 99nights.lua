@@ -227,10 +227,6 @@ local possibleItems = {
     "Laser Fence Blueprint",
     "Leather Body",
     "Log",
-    "LostChild",
-    "LostChild2",
-    "LostChild3",
-    "LostChild4",
     "MedKit",
     "Morsel",
     "Old Flashlight",
@@ -301,7 +297,79 @@ end
 
 -- tp item to you 
 
+-- tp char to you
 
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+local characterFolder = workspace:WaitForChild("Characters")
+
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents") -- if needed
+
+-- List of character names to teleport (your tags)
+local possibleCharacters = {
+    "Alpha Wolf",
+    "Lost Child",
+    "Lost Child2",
+    "Lost Child3",
+    "Lost Child4",
+    "Wolf",
+    "Bunny",
+    "Cultist",
+    "Alien"
+}
+
+local bringCharacterToYou = main:CreateDropDown("Teleport Character:")
+
+-- Helper to find main part (similar to your getModelPart)
+local function getMainPart(model)
+    if model.PrimaryPart then
+        return model.PrimaryPart
+    end
+    for _, part in ipairs(model:GetDescendants()) do
+        if part:IsA("BasePart") then
+            return part
+        end
+    end
+    return nil
+end
+
+local function teleportCharacter(characterName)
+    local stackOffsetY = 3
+    local count = 0
+
+    for _, model in ipairs(characterFolder:GetChildren()) do
+        if model.Name == characterName then
+            local mainPart = getMainPart(model)
+            if mainPart and rootPart then
+                -- Move the whole model so mainPart aligns above player, stacked
+                local targetCFrame = rootPart.CFrame + Vector3.new(0, count * stackOffsetY, 0)
+                -- Use SetPrimaryPartCFrame if PrimaryPart exists, else move mainPart directly
+                if model.PrimaryPart then
+                    model:SetPrimaryPartCFrame(targetCFrame)
+                else
+                    mainPart.CFrame = targetCFrame
+                end
+                count += 1
+            else
+                warn("No main part found for character:", model:GetFullName())
+            end
+        end
+    end
+end
+
+for _, characterName in ipairs(possibleCharacters) do
+    bringCharacterToYou:AddButton(characterName, function()
+        teleportCharacter(characterName)
+    end)
+end
+
+
+-- tp char to you 
 
 
 -- === Player Sliders ===
