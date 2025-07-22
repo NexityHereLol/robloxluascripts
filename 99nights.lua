@@ -21,14 +21,14 @@ baseplate.Size = Vector3.new(20, 1, 20)
 baseplate.Position = Vector3.new(0, 38, 0)
 baseplate.Anchored = true
 baseplate.CanCollide = true
-baseplate.Transparency = 0.5
+baseplate.Transparency = 1
 baseplate.Color = Color3.fromRGB(255, 255, 255)
 baseplate.Parent = workspace
 
 -- Checkbox to toggle visibility
 main:CreateCheckBox("Show Safe Zone", function(enabled)
 	if enabled == true then
-	   baseplate.Transparency = 0.5
+	   baseplate.Transparency = 0.8
 		else
 	   baseplate.Transparency = 1
 	end
@@ -677,5 +677,4 @@ end)
 
 
 -- loop distance
-
 
