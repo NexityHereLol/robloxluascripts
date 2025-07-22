@@ -45,12 +45,16 @@ main:CreateCheckBox("Item ESP", function(state)
 	
 	local customFont = Font.new("rbxassetid://16658246179", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 	local label = Instance.new("TextLabel")
+	
 	label.Size = UDim2.new(1, 0, 1, 0)
+	label.TextSize = 17
 	label.BackgroundTransparency = 1
 	label.TextColor3 = Color3.new(1, 1, 1)
 	label.TextStrokeTransparency = 0.5
-	label.TextScaled = true
+	label.TextScaled = false
 	label.FontFace = customFont
+	label.Text = model.Name
+	
         label.Parent = billboard
 
         billboard.Parent = model
