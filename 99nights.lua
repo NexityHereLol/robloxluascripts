@@ -27,7 +27,7 @@ baseplate.Parent = workspace
 
 -- Checkbox to toggle visibility
 main:CreateCheckBox("Show Safe Zone", function(enabled)
-	if enabled == true 
+	if enabled == true then
 	   baseplate.Transparency = 0.5
 		else
 	   baseplate.Transparency = 1
