@@ -1,6 +1,9 @@
 local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/skidware/refs/heads/main/lib_extension.lua"))()
 local int = lib:CreateInterface("userscript: " .. tostring(game.Players.LocalPlayer), "center")
 local main = int:CreateTab("Main")
+local itemtp = int:CreateTab("Item TP")
+local gametp = int:CreateTab("Game TP")
+local charactertp = int:CreateTab("Mob TP")
 local plr = int:CreateTab("Player")
 local vis = int:CreateTab("Visuals")
 local misc = int:CreateTab("Misc")
@@ -66,7 +69,7 @@ local storyCoords = {
     { "[stronghold] strong zone", "546, 4, 263"}
 }
 
-local storyDropdown = main:CreateDropDown("Teleports")
+local storyDropdown = gametp:CreateDropDown("Teleports")
 
 -- Create dropdown for story teleports
 for _, entry in ipairs(storyCoords) do
@@ -272,7 +275,7 @@ local possibleItems = {
     "Wolf Pelt"
 }
 
-local bringitemtoyou = main:CreateDropDown("Teleport Item:")
+local bringitemtoyou = itemtp:CreateDropDown("Teleport Item:")
 
 local function teleportItem(itemName)
     local stackOffsetY = 2 -- Height between stacked items
@@ -354,7 +357,7 @@ local possibleCharacters = {
     "Alien"
 }
 
-local bringCharacterToYou = main:CreateDropDown("Teleport Character:")
+local bringCharacterToYou = charactertp:CreateDropDown("Teleport Mob:")
 
 -- Helper to find main part (similar to your getModelPart)
 local function getMainPart(model)
