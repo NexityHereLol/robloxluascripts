@@ -1,7 +1,7 @@
 local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/skidware/refs/heads/main/lib_extension.lua"))()
 local int = lib:CreateInterface("userscript: " .. tostring(game.Players.LocalPlayer), "center")
 local main = int:CreateTab("Main")
-local itemtp = int:CreateTab("Item TP")
+local itemtp = int:CreateTab("Item TP/ESP")
 local gametp = int:CreateTab("Game TP")
 local charactertp = int:CreateTab("Mob TP")
 local plr = int:CreateTab("Player")
@@ -66,7 +66,7 @@ end
 local storyCoords = {
     { "[campsite] camp site", "0, 8, -0"},
     { "[safezone] safe zone", "0, 41, -0" },
-    { "[stronghold] strong zone", "546, 4, 263"}
+    { "[stronghold] cultist stronghold", "546, 4, 263"}
 }
 
 local storyDropdown = gametp:CreateDropDown("Teleports")
@@ -80,7 +80,7 @@ for _, entry in ipairs(storyCoords) do
 end
 
 
-main:CreateCheckBox("Item ESP", function(state)
+itemtp:CreateCheckBox("Item ESP", function(state)
     local itemFolder = workspace:FindFirstChild("Items")
     if not itemFolder then
         warn("workspace.Items folder not found")
