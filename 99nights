@@ -11,6 +11,35 @@ local RunService = game:GetService("RunService")
 
 -- === Main Configurations === 
 
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- Safe zone setup
+local baseplate = Instance.new("Part")
+baseplate.Name = "SafeZoneBaseplate"
+baseplate.Size = Vector3.new(20, 1, 20)
+baseplate.Position = Vector3.new(0, 38, 0)
+baseplate.Anchored = true
+baseplate.CanCollide = true
+baseplate.Transparency = 0.5
+baseplate.Color = Color3.fromRGB(255, 255, 255)
+baseplate.Parent = workspace
+
+-- Checkbox to toggle visibility
+main:CreateCheckBox("Show Safe Zone", true, function(enabled)
+	baseplate.Transparency = enabled and 0.5 or 1
+	baseplate.CanCollide = enabled
+end)
+
+-- Button to teleport player to the safe zone
+main:CreateButton("Teleport to Safe Zone", function()
+	local character = player.Character
+	if character and character:FindFirstChild("HumanoidRootPart") then
+		character.HumanoidRootPart.CFrame = CFrame.new(baseplate.Position + Vector3.new(0, 3, 0))
+	end
+end)
+
+
 main:CreateButton("TP to CampSite",function()
 	game.Players.LocalPlayer.Character.Humanoid.Torso.CFrame = CFrame.new(0, 8, -0)
 end)
