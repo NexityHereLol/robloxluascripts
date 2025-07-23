@@ -34,6 +34,9 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 		default = {
 			background = Color3.fromRGB(72, 72, 72),
 		},
+		ink = { 
+			background = Color3.fromRGB(170, 0, 255),
+		},
 	}
 
 	local currentTheme = themes[theme] or themes.default
