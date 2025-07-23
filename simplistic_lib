@@ -376,8 +376,10 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 			info = "rbxassetid://86067724745223",
 			player = "rbxassetid://126189868294121",
 			op = "rbxassetid://114756075648794",
-			basic = "rbxassetid://85258553863764",
+			home = "rbxassetid://85258553863764",
+			default = "rbxassetid://84919699164053",
 			misc = "rbxassetid://121441938394147",
+			visuals = "rbxassetid://92037166850475",
 			farm = "rbxassetid://90384092320465"
 		}
 
@@ -733,7 +735,7 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 
 			slider.Name = "slider"
 			slider.Parent = tabpage -- <- make sure this is set correctly in your lib
-			slider.BackgroundColor3 = currentTheme.background or Color3.new(0.654902, 0.368627, 0.176471)
+			slider.BackgroundColor3 = Color3.fromRGB(167, 94, 45)
 			slider.BorderSizePixel = 0
 			slider.Size = UDim2.new(0, 364, 0, 55)
 
