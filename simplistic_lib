@@ -459,6 +459,7 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 		image.ImageTransparency = 0.3
 
 		-- Tab content frame (ScrollingFrame)
+		-- tabpage stuff
 		local tabpage = Instance.new("ScrollingFrame")
 		tabpage.Name = "tabpage"
 		tabpage.Parent = lib_holder
