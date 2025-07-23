@@ -520,19 +520,24 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 		UIListLayoutPage.Parent = tabpage
 
 		-- Scrollbar show/hide logic
+		local lastHeight = 0
 		RunService.Heartbeat:Connect(function()
 			local contentHeight = UIListLayoutPage.AbsoluteContentSize.Y
 			local frameHeight = tabpage.AbsoluteSize.Y
-
-			tabpage.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 10)
-
-			if contentHeight > frameHeight then
-				tabpage.ScrollBarImageTransparency = 0
-				tabpage.ScrollBarThickness = 5
-			else
-				tabpage.ScrollBarImageTransparency = 1
-				tabpage.ScrollBarThickness = 0
-				tabpage.CanvasPosition = Vector2.new(0, 0)
+		
+			-- Only update when content height changes
+			if contentHeight ~= lastHeight then
+				lastHeight = contentHeight
+				tabpage.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 10)
+		
+				if contentHeight > frameHeight then
+					tabpage.ScrollBarImageTransparency = 0
+					tabpage.ScrollBarThickness = 5
+				else
+					tabpage.ScrollBarImageTransparency = 1
+					tabpage.ScrollBarThickness = 0
+					tabpage.CanvasPosition = Vector2.new(0, 0)
+				end
 			end
 		end)
 
