@@ -515,10 +515,12 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 		UIListLayoutPage.Parent = tabpage
 
 		-- Scrollbar show/hide logic
-		local function updateScrollbar()
-		local contentHeight = UIListLayoutPage.AbsoluteContentSize.Y
+				local function updateScrollbar()
+			local contentHeight = UIListLayoutPage.AbsoluteContentSize.Y
 			local frameHeight = tabpage.AbsoluteSize.Y
-
+		
+			tabpage.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 10)
+		
 			if contentHeight > frameHeight then
 				tabpage.ScrollBarImageTransparency = 0
 				tabpage.ScrollBarThickness = 5
@@ -528,10 +530,33 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 				tabpage.CanvasPosition = Vector2.new(0, 0)
 			end
 		end
-
+		
+		-- Reconnect child listeners
+		local function connectChildSignals(child)
+			if child:IsA("GuiObject") then
+				child:GetPropertyChangedSignal("Size"):Connect(updateScrollbar)
+				child:GetPropertyChangedSignal("Visible"):Connect(updateScrollbar)
+			end
+		end
+		
+		-- Connect existing children
+		for _, child in ipairs(tabpage:GetChildren()) do
+			connectChildSignals(child)
+		end
+		
+		-- Watch for future children too
+		tabpage.ChildAdded:Connect(function(child)
+			connectChildSignals(child)
+			updateScrollbar()
+		end)
+		
+		-- Scroll behavior
 		UIListLayoutPage:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScrollbar)
 		tabpage:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateScrollbar)
+		
+		-- Initial update
 		updateScrollbar()
+
 
 
 		tabContents[tabname] = tabpage
