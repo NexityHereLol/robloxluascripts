@@ -467,7 +467,8 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 		tabpage.BackgroundTransparency = 1
 		tabpage.BorderSizePixel = 0
 		tabpage.Position = UDim2.new(0.27, 0, 0.19, 0)
-		tabpage.Size = UDim2.new(0, 382, 0, 261)
+		tabpage.Size = UDim2.new(0, 382, 0, 278)
+		tabpage.ScrollingEnabled = true
 		tabpage.BottomImage = ""
 		tabpage.ScrollBarThickness = 5
 		tabpage.TopImage = ""
@@ -515,23 +516,22 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 		-- Scrollbar show/hide logic
 		local function updateScrollbar()
 		local contentHeight = UIListLayoutPage.AbsoluteContentSize.Y
-		local frameHeight = tabpage.AbsoluteSize.Y
-	
-		tabpage.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 30)
-	
-		if contentHeight > frameHeight then
-			tabpage.ScrollBarImageTransparency = 0
-			tabpage.ScrollBarThickness = 5
-		else
-			tabpage.ScrollBarImageTransparency = 1
-			tabpage.ScrollBarThickness = 0
-			tabpage.CanvasPosition = Vector2.new(0, 0)
-		end
-end
+			local frameHeight = tabpage.AbsoluteSize.Y
 
-UIListLayoutPage:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScrollbar)
-tabpage:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateScrollbar)
-updateScrollbar()
+			if contentHeight > frameHeight then
+				tabpage.ScrollBarImageTransparency = 0
+				tabpage.ScrollBarThickness = 5
+			else
+				tabpage.ScrollBarImageTransparency = 1
+				tabpage.ScrollBarThickness = 0
+				tabpage.CanvasPosition = Vector2.new(0, 0)
+			end
+		end
+
+		UIListLayoutPage:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScrollbar)
+		tabpage:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateScrollbar)
+		updateScrollbar()
+
 
 		tabContents[tabname] = tabpage
 		tabButtons[tabname] = tab_page
