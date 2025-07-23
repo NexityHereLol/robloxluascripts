@@ -1,5 +1,5 @@
 local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/robloxluascripts/refs/heads/main/simplistic_lib"))()
-local int = lib:CreateInterface("99 Nights in the Forest","script made by lohjc","https://discord.gg/ZNTHTWx7KE","bottom left","forest")
+local int = lib:CreateInterface("99 Nights in the Forest","script made by lohjc","https://discord.gg/ZNTHTWx7KE","bottom left","royal")
 local main = int:CreateTab("Main","main functions/script utilities","default")
 local itemtp = int:CreateTab("Item TP/ESP","bring items to you","item")
 local gametp = int:CreateTab("Game TP","goto in-game locations","info")
@@ -829,7 +829,7 @@ local bracket = {
     },
     materials = {
         "Log", "Coal", "Fuel Canister", "UFO Junk", "UFO Component",
-        "Old Car Engine", "Broken Fan", "Old Microwave"
+        "Old Car Engine", "Broken Fan", "Old Microwave", "Old Radio", "Sheet Metal"
     },
     pelts = {
         "Alpha Wolf Pelt", "Bear Pelt", "Wolf Pelt", "Bunny Foot"
@@ -921,7 +921,7 @@ local stackOffsetY = 2
 -- Define item groups
 local fuelFireItems = {"Log", "Coal", "Fuel Canister", "Biofuel", "Oil Barrel"}
 local cookFoodItems = {"Morsel", "Steak"}
-local boltsItems = {"UFO Junk", "UFO Component", "Old Car Engine", "Broken Fan", "Old Microwave", "Bolt","Log","Cultist Gem"}
+local boltsItems = {"UFO Junk", "UFO Component", "Old Car Engine", "Broken Fan", "Old Microwave", "Bolt","Log","Cultist Gem", "Sheet Metal", "Old Radio", "Old Microwave"}
 
 -- Teleport function (can be reused)
 local function teleportItemsToPosition(itemNames, position)
