@@ -689,7 +689,7 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 			separator.BorderColor3 = Color3.new(0, 0, 0)
 			separator.BorderSizePixel = 0
 			separator.Position = UDim2.new(4.19197512e-08, 0, 1.08394814, 0)
-			separator.Size = UDim2.new(0, 363, 0, -4)
+			separator.Size = UDim2.new(0, 363, 0, -2)
 
 			comment_2.Name = "comment"
 			comment_2.Parent = comment
