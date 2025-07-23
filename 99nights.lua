@@ -788,7 +788,7 @@ main:CreateCheckbox("Kill Aura", function(state)
 end)
 
 -- UI slider for radius, with clamping and updating
-main:CreateSlider("Kill Aura Radius", 1000, 20, function(value)
+main:CreateSlider("Kill Aura Radius", 500, 50, function(value)
     radius = math.clamp(value, 20, 1000)
 end)
 
