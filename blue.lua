@@ -264,6 +264,7 @@ local possibleItems = {
     "Laser Fence Blueprint",
     "Leather Body",
     "Iron Body",
+    "Thorn Body",
     "Log",
     "MedKit",
     "Morsel",
