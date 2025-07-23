@@ -380,6 +380,7 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 			default = "rbxassetid://84919699164053",
 			misc = "rbxassetid://121441938394147",
 			visuals = "rbxassetid://92037166850475",
+			item = "rbxassetid://83621162854932",
 			farm = "rbxassetid://90384092320465"
 		}
 
