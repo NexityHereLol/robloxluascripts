@@ -146,6 +146,53 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 	corehandler.IgnoreGuiInset = false
 	corehandler.ResetOnSpawn = false
 
+    local RunService = game:GetService("RunService")
+
+-- Assume corehandler already exists and is a ScreenGui or Frame
+-- And lib_holder already exists as a child of corehandler
+
+-- Create Shadow ImageLabel
+    local Shadow = Instance.new("ImageLabel")
+    Shadow.Name = "Shadow"
+    Shadow.Parent = corehandler
+    Shadow.BackgroundColor3 = Color3.new(1, 1, 1)
+    Shadow.BackgroundTransparency = 1
+    Shadow.BorderSizePixel = 0
+    Shadow.ZIndex = lib_holder.ZIndex - 1 -- behind lib_holder
+    Shadow.Image = "rbxassetid://186491278" -- your shadow image
+    Shadow.ImageTransparency = 0.19
+    Shadow.ScaleType = Enum.ScaleType.Slice
+    Shadow.SliceCenter = Rect.new(48, 48, 48, 48)
+    
+   
+    local RunService = game:GetService("RunService")
+
+local paddingLeft = 30
+local paddingTop = 30
+local paddingRight = 20
+local paddingBottom = 22
+local dropOffsetPx = Vector2.new(4, 4)
+
+local function updateShadow()
+	local absPos = lib_holder.AbsolutePosition
+	local absSize = lib_holder.AbsoluteSize
+
+	local totalWidth = absSize.X + paddingLeft + paddingRight
+	local totalHeight = absSize.Y + paddingTop + paddingBottom
+
+	Shadow.Size = UDim2.new(0, totalWidth, 0, totalHeight)
+	Shadow.Position = UDim2.new(0, absPos.X - paddingLeft + dropOffsetPx.X, 0, absPos.Y - paddingTop + dropOffsetPx.Y)
+end
+
+-- Initial update
+updateShadow()
+
+-- Update shadow when lib_holder moves or resizes
+lib_holder:GetPropertyChangedSignal("AbsolutePosition"):Connect(updateShadow)
+lib_holder:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateShadow)
+
+
+
 	lib_holder.Name = "lib_holder"
 	lib_holder.Parent = corehandler
 	lib_holder.BackgroundColor3 = Color3.new(0.0823529, 0.0823529, 0.0823529)
