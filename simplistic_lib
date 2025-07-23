@@ -513,9 +513,18 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 		UIListLayoutPage.Parent = tabpage
 
 		-- Scrollbar show/hide logic
-		local function updateScrollbar()
+		local RunService = game:GetService("RunService")
+		local UIListLayoutPage = Instance.new("UIListLayout")
+		UIListLayoutPage.SortOrder = Enum.SortOrder.LayoutOrder
+		UIListLayoutPage.Padding = UDim.new(0, 7)
+		UIListLayoutPage.Parent = tabpage
+
+		-- Scrollbar show/hide logic
+		RunService.Heartbeat:Connect(function()
 			local contentHeight = UIListLayoutPage.AbsoluteContentSize.Y
 			local frameHeight = tabpage.AbsoluteSize.Y
+
+			tabpage.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 10)
 
 			if contentHeight > frameHeight then
 				tabpage.ScrollBarImageTransparency = 0
@@ -525,11 +534,7 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 				tabpage.ScrollBarThickness = 0
 				tabpage.CanvasPosition = Vector2.new(0, 0)
 			end
-		end
-
-		UIListLayoutPage:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateScrollbar)
-		tabpage:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateScrollbar)
-		updateScrollbar()
+		end)
 
 		tabContents[tabname] = tabpage
 		tabButtons[tabname] = tab_page
