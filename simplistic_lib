@@ -18,27 +18,37 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 	local secondpadding = Instance.new("Frame") 
 	
 	-- color themes
-	
+	-- color stuff
+
 	local themes = {
-		halloween = {
-			background = Color3.fromRGB(167, 94, 45),
-		},
-		ocean = {
-			background = Color3.fromRGB(36, 132, 141),
-		},
-		green = {
-			background = Color3.fromRGB(84, 147, 55),
-		},
-		red = {
-			background = Color3.fromRGB(89, 14, 14),
-		},
-		default = {
-			background = Color3.fromRGB(72, 72, 72),
-		},
-		ink = 
-		{
-			background = Color3.fromRGB(144, 58, 165)
-		},
+		-- Original Themes
+		halloween = { background = Color3.fromRGB(167, 94, 45) },
+		ocean =     { background = Color3.fromRGB(36, 132, 141) },
+		green =     { background = Color3.fromRGB(84, 147, 55) },
+		red =       { background = Color3.fromRGB(89, 14, 14) },
+		default =   { background = Color3.fromRGB(72, 72, 72) },
+		ink =       { background = Color3.fromRGB(144, 58, 165) },
+	
+		-- New Themes
+		ice =         { background = Color3.fromRGB(180, 225, 255) },
+		night =       { background = Color3.fromRGB(24, 24, 24) },
+		sky =         { background = Color3.fromRGB(111, 197, 255) },
+		fog =         { background = Color3.fromRGB(169, 169, 169) },
+		lemon =       { background = Color3.fromRGB(255, 245, 157) },
+		neon =        { background = Color3.fromRGB(199, 0, 255) },
+		vaporwave =   { background = Color3.fromRGB(255, 105, 180) },
+		forest =      { background = Color3.fromRGB(44, 89, 66) },
+		sunset =      { background = Color3.fromRGB(255, 94, 77) },
+		fire =        { background = Color3.fromRGB(255, 87, 34) },
+		stone =       { background = Color3.fromRGB(120, 120, 120) },
+		steel =       { background = Color3.fromRGB(85, 98, 112) },
+		cyber =       { background = Color3.fromRGB(0, 255, 170) },
+		royal =       { background = Color3.fromRGB(74, 0, 115) },
+		icefire =     { background = Color3.fromRGB(78, 205, 196) },
+		gold =        { background = Color3.fromRGB(255, 215, 0) },
+		sludge =      { background = Color3.fromRGB(70, 63, 50) },
+		dream =       { background = Color3.fromRGB(174, 144, 255) },
+		blush =       { background = Color3.fromRGB(255, 192, 203) },
 	}
 
 	local currentTheme = themes[theme] or themes.default
