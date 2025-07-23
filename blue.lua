@@ -240,6 +240,7 @@ local possibleItems = {
     "Alien Chest",
     "Alpha Wolf Pelt",
     "Anvil Front",
+    "Anvil Back",
     "Apple",
     "Bandage",
     "Bear Corpse",
