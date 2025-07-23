@@ -1,12 +1,12 @@
-local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/skidware/refs/heads/main/lib_extension.lua"))()
-local int = lib:CreateInterface("userscript: " .. tostring(game.Players.LocalPlayer), "center")
-local main = int:CreateTab("Main")
-local itemtp = int:CreateTab("Item TP/ESP")
-local gametp = int:CreateTab("Game TP")
-local charactertp = int:CreateTab("Mob TP")
-local plr = int:CreateTab("Player")
-local vis = int:CreateTab("Visuals")
-local misc = int:CreateTab("Misc")
+local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/robloxluascripts/refs/heads/main/simplistic_lib"))()
+local int = lib:CreateInterface("99 Nights in the Forest","script made by lohjc","https://discord.gg/ZNTHTWx7KE","bottom left","blush")
+local main = int:CreateTab("Main","main functions/script utilities","default")
+local itemtp = int:CreateTab("Item TP/ESP","bring items to you","item")
+local gametp = int:CreateTab("Game TP","goto in-game locations","info")
+local charactertp = int:CreateTab("Mob TP","bring mobs to you","npc")
+local plr = int:CreateTab("Player","modify your localplayer","player")
+local vis = int:CreateTab("Visuals","modify autoyour visuals","visuals")
+local misc = int:CreateTab("Misc","miscellaneous","misc")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -21,7 +21,7 @@ local player = Players.LocalPlayer
 local baseplate = Instance.new("Part")
 baseplate.Name = "SafeZoneBaseplate"
 baseplate.Size = Vector3.new(20, 1, 20)
-baseplate.Position = Vector3.new(0, 38, 0)
+baseplate.Position = Vector3.new(0, 100, 0)
 baseplate.Anchored = true
 baseplate.CanCollide = true
 baseplate.Transparency = 1
@@ -29,7 +29,7 @@ baseplate.Color = Color3.fromRGB(255, 255, 255)
 baseplate.Parent = workspace
 
 -- Checkbox to toggle visibility
-main:CreateCheckBox("Show Safe Zone", function(enabled)
+main:CreateCheckbox("Show Safe Zone", function(enabled)
 	if enabled == true then
 	   baseplate.Transparency = 0.8
 		else
@@ -65,7 +65,7 @@ end
 
 local storyCoords = {
     { "[campsite] camp site", "0, 8, -0"},
-    { "[safezone] safe zone", "0, 41, -0" },
+    { "[safezone] safe zone", "0, 110, -0" },
     { "[stronghold] cultist stronghold", "546, 4, 263"}
 }
 
@@ -80,7 +80,7 @@ for _, entry in ipairs(storyCoords) do
 end
 
 
-itemtp:CreateCheckBox("Item ESP", function(state)
+itemtp:CreateCheckbox("Item ESP", function(state)
     local itemFolder = workspace:FindFirstChild("Items")
     if not itemFolder then
         warn("workspace.Items folder not found")
@@ -88,7 +88,7 @@ itemtp:CreateCheckBox("Item ESP", function(state)
     end
 
     local itemNames = {
-        ["Revolver"] = true, ["Bunny Foot"] = true,["MedKit"] = true, ["Alien Chest"] = true, ["Berry"] = true,
+        ["Revolver"] = true, ["Oil Barrel"] = true, ["Chainsaw"] = true, ["Giant Sack"] = true, ["Bunny Foot"] = true,["MedKit"] = true, ["Alien Chest"] = true, ["Berry"] = true,
         ["Bolt"] = true, ["Broken Fan"] = true, ["Carrot"] = true, ["Coal"] = true,
         ["Coin Stack"] = true, ["Hologram Emitter"] = true, ["Item Chest"] = true,
         ["Laser Fence Blueprint"] = true, ["Log"] = true, ["Old Flashlight"] = true,
@@ -186,7 +186,7 @@ local function getModelPart(model)
     return nil
 end
 
-local dropdown = main:CreateDropDown("Teleport to Item")
+local dropdown = itemtp:CreateDropDown("Teleport to Item")
 
 for _, itemName in ipairs(itemNames) do
     dropdown:AddButton("TP to " .. itemName, function()
@@ -240,6 +240,7 @@ local possibleItems = {
     "Alien Chest",
     "Alpha Wolf Pelt",
     "Anvil Front",
+    "Anvil Back",
     "Apple",
     "Bandage",
     "Bear Corpse",
@@ -254,17 +255,29 @@ local possibleItems = {
     "Coin Stack",
     "Cooked Morsel",
     "Cooked Steak",
+    "Chainsaw",
     "Cultist",
+    "Cultist Gem",
     "Flower",
+    "Fuel Canister",
     "Hologram Emitter",
     "Item Chest",
     "Laser Fence Blueprint",
     "Leather Body",
+    "Iron Body",
+    "Thorn Body",
     "Log",
     "MedKit",
     "Morsel",
     "Old Flashlight",
     "Old Radio",
+    "Good Sack",
+    "Good Axe",
+    "Raygun",
+    "Giant Sack",
+    "Strong Axe",
+    "Oil Barrel",
+    "Old Car Engine",
     "Rifle",
     "Rifle Ammo",
     "Revolver",
@@ -275,7 +288,7 @@ local possibleItems = {
     "Wolf Pelt"
 }
 
-local bringitemtoyou = itemtp:CreateDropDown("Teleport Item:")
+local bringitemtoyou = itemtp:CreateDropDown("Teleport Item (Bulk):")
 
 local function teleportItem(itemName)
     local stackOffsetY = 2 -- Height between stacked items
@@ -388,7 +401,7 @@ local function teleportCharacter(characterName)
                 else
                     mainPart.CFrame = targetCFrame
                 end
-                count += 1
+                count = count + 1
             else
                 warn("No main part found for character:", model:GetFullName())
             end
@@ -441,7 +454,7 @@ plr:CreateSlider("walkspeed", 500, 16, function(value)
     end)
 end)
 
-plr:CreateCheckBox("walkspeed toggle (50)",function(toggle)
+plr:CreateCheckbox("walkspeed toggle (50)",function(toggle)
     if toggle == true then 
     _G.HackedWalkSpeed = 50
         else
@@ -599,7 +612,7 @@ local function handlePlayerESP(plr)
 end
 
 --// GUI TOGGLES (INTEGRATE INTO YOUR UI)
-vis:CreateCheckBox("ESP", function(state)
+vis:CreateCheckbox("ESP", function(state)
 	ESPEnabled = state
 	if not state then
 		cleanupBillboardESP()
@@ -612,7 +625,7 @@ vis:CreateCheckBox("ESP", function(state)
 	end
 end)
 
-vis:CreateCheckBox("Chams", function(state)
+vis:CreateCheckbox("Chams", function(state)
 	ChamsEnabled = state
 	if not state then
 		cleanupChamsESP()
@@ -654,7 +667,7 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
-vis:CreateCheckBox("FOV Circle", function(state)
+vis:CreateCheckbox("FOV Circle", function(state)
 	FOVCircle.Visible = state
 end)
 
@@ -691,12 +704,14 @@ local player = Players.LocalPlayer
 
 local killAuraToggle = false
 local radius = 200
+-- Script generated by TurtleSpy, made by Intrer#0421
 
 -- Supported tools and their damage IDs
 local toolsDamageIDs = {
     ["Old Axe"] = "1_8982038982",
     ["Good Axe"] = "112_8982038982",
-    ["Strong Axe"] = "116_8982038982" 
+    ["Strong Axe"] = "116_8982038982" ,
+    ["Chainsaw"] = "647_8992824875"
 }
 
 -- Try to find any supported tool in inventory with damageID
@@ -762,7 +777,7 @@ local function killAuraLoop()
 end
 
 -- UI checkbox toggle
-main:CreateCheckBox("Kill Aura", function(state)
+main:CreateCheckbox("Kill Aura", function(state)
     killAuraToggle = state
     if state then
         task.spawn(killAuraLoop)
@@ -773,10 +788,174 @@ main:CreateCheckBox("Kill Aura", function(state)
 end)
 
 -- UI slider for radius, with clamping and updating
-main:CreateSlider("Kill Aura Radius", 500, 20, function(value)
-    radius = math.clamp(value, 20, 500)
+main:CreateSlider("Kill Aura Radius", 1000, 20, function(value)
+    radius = math.clamp(value, 20, 1000)
 end)
 
 
 -- loop distance
 
+
+
+-- extra item automation
+
+itemtp:CreateComment("remaining specific item teleports:")
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+local itemsFolder = workspace:WaitForChild("Items")
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+
+local bracket = {
+    weapons = {
+        -- Removed Good Axe and Strong Axe
+        "Laser Sword", "Raygun", "Kunai", "Katana" -- moved to misc tools, but you wanted it here too?
+    },
+    minifoods = {
+        "Apple", "Berry", "Carrot"
+    },
+    meat = {
+        "Steak", "Cooked Steak", "Cooked Morsel" , "Morsel"
+    },
+    armor = {
+        "Leather Body", "Iron Body", "Thorn Body"
+    },
+    ["guns/ammo"] = {
+        "Rifle", "Revolver", "Raygun", "Tactical Shotgun", "Revolver Ammo", "Rifle Ammo"
+    },
+    materials = {
+        "Log", "Coal", "Fuel Canister", "UFO Junk", "UFO Component",
+        "Old Car Engine", "Broken Fan", "Old Microwave"
+    },
+    pelts = {
+        "Alpha Wolf Pelt", "Bear Pelt", "Wolf Pelt", "Bunny Foot"
+    },
+    misc_tools = {  -- changed to misc_tools for consistency with no spaces
+        "Good Sack", "Old Flashlight", "Old Radio", "Giant Sack", "Strong Flashlight", "Chainsaw"
+    }
+}
+
+-- Finds the first suitable BasePart to teleport
+local function findTeleportablePart(item)
+    for _, descendant in ipairs(item:GetDescendants()) do
+        if descendant:IsA("BasePart") then
+            return descendant
+        end
+        if descendant:IsA("Model") then
+            for _, sub in ipairs(descendant:GetDescendants()) do
+                if sub:IsA("BasePart") then
+                    return sub
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function teleportItem(itemName)
+    local stackOffsetY = 2 -- offset per stacked item
+    local count = 0
+
+    for _, item in ipairs(itemsFolder:GetChildren()) do
+        if item.Name == itemName then
+            local targetPart = findTeleportablePart(item)
+            if targetPart then
+                remoteEvents.RequestStartDraggingItem:FireServer(item)
+                local offset = Vector3.new(0, count * stackOffsetY, 0)
+                targetPart.CFrame = rootPart.CFrame + offset
+                remoteEvents.StopDraggingItem:FireServer(item)
+
+                print("Moved", itemName, ":", item:GetFullName())
+                count = count + 1
+            else
+                warn("Couldn't find part for:", item:GetFullName())
+            end
+        end
+    end
+end
+
+-- Create one dropdown per bracket
+for groupName, itemList in pairs(bracket) do
+    -- Make dropdown label nicer: replace underscores and slashes, capitalize words
+    local label = groupName:gsub("_", " "):gsub("/", "/")
+    label = label:gsub("(%a)([%w_']*)", function(first, rest)
+        return first:upper() .. rest:lower()
+    end)
+    local dropdown = itemtp:CreateDropDown(label)
+    for _, itemName in ipairs(itemList) do
+        dropdown:AddButton(itemName, function()
+            teleportItem(itemName)
+        end)
+    end
+end
+
+-- separation for the automation
+itemtp:CreateComment("automation features below:")
+
+local automationDropdown = itemtp:CreateDropDown("Automation")
+
+local autoFuelFireEnabled = false
+local autoCookFoodEnabled = false
+local autoBoltsEnabled = false
+
+automationDropdown:AddCheckbox("Auto Fuel Fire", function(checked)
+    autoFuelFireEnabled = checked
+end)
+
+automationDropdown:AddCheckbox("Auto Cook Food", function(checked)
+    autoCookFoodEnabled = checked
+end)
+
+automationDropdown:AddCheckbox("Auto Bolts/Log/Cultist Gem", function(checked)
+    autoBoltsEnabled = checked
+end)
+
+local campfirePos = Vector3.new(0, 13, 0)
+local grinderPos = Vector3.new(20, 13, -5)
+local stackOffsetY = 2
+
+-- Define item groups
+local fuelFireItems = {"Log", "Coal", "Fuel Canister", "Biofuel", "Oil Barrel"}
+local cookFoodItems = {"Morsel", "Steak"}
+local boltsItems = {"UFO Junk", "UFO Component", "Old Car Engine", "Broken Fan", "Old Microwave", "Bolt","Log","Cultist Gem"}
+
+-- Teleport function (can be reused)
+local function teleportItemsToPosition(itemNames, position)
+    local count = 0
+    for _, item in ipairs(itemsFolder:GetChildren()) do
+        if table.find(itemNames, item.Name) then
+            local targetPart = findTeleportablePart(item)
+            if targetPart then
+                remoteEvents.RequestStartDraggingItem:FireServer(item)
+                local offset = Vector3.new(0, count * stackOffsetY, 0)
+                targetPart.CFrame = CFrame.new(position + offset)
+                remoteEvents.StopDraggingItem:FireServer(item)
+                count = count + 1
+            end
+        end
+    end
+end
+
+-- Run loop (example, tweak interval as needed)
+while true do
+    wait(2) -- every 2 seconds
+    
+    if autoFuelFireEnabled then
+        teleportItemsToPosition(fuelFireItems, campfirePos)
+    end
+    
+    if autoCookFoodEnabled then
+        teleportItemsToPosition(cookFoodItems, campfirePos)
+    end
+    
+    if autoBoltsEnabled then
+        teleportItemsToPosition(boltsItems, grinderPos)
+    end
+end
+
+
+-- extra item automation
