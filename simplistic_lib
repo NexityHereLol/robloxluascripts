@@ -378,6 +378,7 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 			op = "rbxassetid://114756075648794",
 			home = "rbxassetid://85258553863764",
 			default = "rbxassetid://84919699164053",
+			npc = "rbxassetid://118094616090629",
 			misc = "rbxassetid://121441938394147",
 			visuals = "rbxassetid://92037166850475",
 			item = "rbxassetid://83621162854932",
