@@ -366,7 +366,7 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 	tabholders.BorderSizePixel = 0
 	tabholders.Position = UDim2.new(0, 0, 0.304347813, 0)
 	tabholders.Size = UDim2.new(0, 137, 0, 266)
-	tabholders.ScrollBarThickness = 4
+	tabholders.ScrollBarThickness = 0
 	tabholders.CanvasSize = UDim2.new(0, 0, 0, 0)
 	
 	-- Create UIListLayout under tabholders
