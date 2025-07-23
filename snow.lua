@@ -274,6 +274,8 @@ local possibleItems = {
     "Good Sack",
     "Good Axe",
     "Raygun",
+    "Alien Body",
+    "Laser Sword",
     "Giant Sack",
     "Strong Axe",
     "Oil Barrel",
