@@ -737,7 +737,7 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 
 			slider.Name = "slider"
 			slider.Parent = tabpage -- <- make sure this is set correctly in your lib
-			slider.BackgroundColor3 = Color3.fromRGB(167, 94, 45)
+			slider.BackgroundColor3 = currentTheme.background or Color3.new(0.654902, 0.368627, 0.176471)
 			slider.BorderSizePixel = 0
 			slider.Size = UDim2.new(0, 364, 0, 55)
 
