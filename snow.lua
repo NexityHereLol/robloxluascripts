@@ -1,5 +1,5 @@
 local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/robloxluascripts/refs/heads/main/simplistic_lib"))()
-local int = lib:CreateInterface("99 Nights in the Forest","enhance your gameplay!","https://discord.gg/ZNTHTWx7KE","bottom left","ink")
+local int = lib:CreateInterface("99 Nights in the Forest","script made by lohjc","https://discord.gg/ZNTHTWx7KE","bottom left","default")
 local main = int:CreateTab("Main","main functions/script utilities","default")
 local itemtp = int:CreateTab("Item TP/ESP","bring items to you","item")
 local gametp = int:CreateTab("Game TP","goto in-game locations","info")
@@ -240,6 +240,7 @@ local possibleItems = {
     "Alien Chest",
     "Alpha Wolf Pelt",
     "Anvil Front",
+    "Anvil Back",
     "Apple",
     "Bandage",
     "Bear Corpse",
@@ -263,6 +264,8 @@ local possibleItems = {
     "Item Chest",
     "Laser Fence Blueprint",
     "Leather Body",
+    "Iron Body",
+    "Thorn Body",
     "Log",
     "MedKit",
     "Morsel",
