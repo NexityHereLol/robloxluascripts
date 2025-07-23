@@ -467,7 +467,7 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 		tabpage.BackgroundTransparency = 1
 		tabpage.BorderSizePixel = 0
 		tabpage.Position = UDim2.new(0.27, 0, 0.19, 0)
-		tabpage.Size = UDim2.new(0, 382, 0, 278)
+		tabpage.Size = UDim2.new(0, 382, 0, 261)
 		tabpage.ScrollingEnabled = true
 		tabpage.BottomImage = ""
 		tabpage.ScrollBarThickness = 5
