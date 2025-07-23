@@ -1,5 +1,5 @@
 local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/robloxluascripts/refs/heads/main/simplistic_lib"))()
-local int = lib:CreateInterface("99 Nights in the Forest","script made by lohjc","https://discord.gg/ZNTHTWx7KE","bottom left","blush")
+local int = lib:CreateInterface("99 Nights in the Forest","script made by lohjc","https://discord.gg/ZNTHTWx7KE","bottom left","forest")
 local main = int:CreateTab("Main","main functions/script utilities","default")
 local itemtp = int:CreateTab("Item TP/ESP","bring items to you","item")
 local gametp = int:CreateTab("Game TP","goto in-game locations","info")
