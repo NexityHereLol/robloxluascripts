@@ -366,17 +366,27 @@ function lib:CreateInterface(name, subinfo, linkpromo, alignment, theme)
 	tabholders.BorderSizePixel = 0
 	tabholders.Position = UDim2.new(0, 0, 0.304347813, 0)
 	tabholders.Size = UDim2.new(0, 137, 0, 266)
-	tabholders.ScrollBarThickness = 0
+	tabholders.ScrollBarThickness = 4
+	tabholders.CanvasSize = UDim2.new(0, 0, 0, 0)
 	
+	-- Create UIListLayout under tabholders
+	local listLayout = Instance.new("UIListLayout")
+	listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	listLayout.Padding = UDim.new(0, 5)
+	listLayout.Parent = tabholders
+	
+	-- Function to update canvas size
 	local function updateCanvasSize()
-		tabholders.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10) 
-		-- +10 padding so it doesn’t cut off
+		tabholders.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
 	end
-
+	
+	-- Connect resize/update signals
+	listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
 	tabholders:GetPropertyChangedSignal("AbsoluteSize"):Connect(updateCanvasSize)
-
+	
 	-- Initial update
 	updateCanvasSize()
+
 
 
 	UICorner.Parent = tabholders
