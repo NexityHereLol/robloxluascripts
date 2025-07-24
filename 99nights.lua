@@ -904,7 +904,6 @@ local autoBoltsEnabled = false
 
 --
 
-
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local workspace = game:GetService("Workspace")
@@ -915,6 +914,9 @@ local remoteConsume = ReplicatedStorage.RemoteEvents.RequestConsumeItem
 local hungerBar = player.PlayerGui.Interface.StatBars.HungerBar.Bar
 
 local autoEatEnabled = false
+local hungerThreshold = 0.5
+local fullHunger = 1.0
+
 local foodsToEat = {
     "Cooked Steak",
     "Cooked Morsel",
@@ -923,7 +925,7 @@ local foodsToEat = {
     "Apple"
 }
 
--- Find an available food instance from workspace.Items
+-- Finds first available food in workspace.Items matching foodsToEat
 local function getAvailableFood()
     for _, item in ipairs(itemsFolder:GetChildren()) do
         if table.find(foodsToEat, item.Name) then
@@ -933,12 +935,22 @@ local function getAvailableFood()
     return nil
 end
 
--- Auto eat loop
+local isEating = false
+
 coroutine.wrap(function()
     while true do
         if autoEatEnabled then
             local hungerValue = hungerBar.Size.X.Scale
-            if hungerValue < 0.5 then
+
+            if not isEating and hungerValue <= hungerThreshold then
+                isEating = true
+                print("Hunger low, starting to eat")
+            elseif isEating and hungerValue >= fullHunger then
+                isEating = false
+                print("Hunger full, stopping eating")
+            end
+
+            if isEating then
                 local foodInstance = getAvailableFood()
                 if foodInstance then
                     print("Auto-eating:", foodInstance.Name)
@@ -957,12 +969,10 @@ coroutine.wrap(function()
     end
 end)()
 
--- Hookup checkbox
 automationDropdown:AddCheckbox("Auto Eat Food", function(checked)
     autoEatEnabled = checked
     print("Auto Eat Food toggled:", checked)
 end)
-
 
 
 --
