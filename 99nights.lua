@@ -1,6 +1,7 @@
 local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/NexityHereLol/robloxluascripts/refs/heads/main/simplistic_lib"))()
 local int = lib:CreateInterface("99 Nights in the Forest","script made by lohjc","https://discord.gg/ZNTHTWx7KE","bottom left","royal")
 local main = int:CreateTab("Main","main functions/script utilities","default")
+local autofarmss = int:CreateTab("Auto","auto farm utilities (OP)","op")
 local itemtp = int:CreateTab("Item TP/ESP","bring items to you","item")
 local gametp = int:CreateTab("Game TP","goto in-game locations","info")
 local charactertp = int:CreateTab("Mob TP","bring mobs to you","npc")
@@ -896,7 +897,7 @@ end
 -- separation for the automation
 itemtp:CreateComment("automation features below:")
 
-local automationDropdown = itemtp:CreateDropDown("Automation")
+local automationDropdown = autofarmss:CreateDropDown("Automation")
 
 local autoFuelFireEnabled = false
 local autoCookFoodEnabled = false
