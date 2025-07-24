@@ -902,6 +902,72 @@ local autoFuelFireEnabled = false
 local autoCookFoodEnabled = false
 local autoBoltsEnabled = false
 
+--
+
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local itemsFolder = workspace:WaitForChild("Items")
+local remoteConsume = ReplicatedStorage.RemoteEvents.RequestConsumeItem
+local hungerBar = player.PlayerGui.Interface.StatBars.HungerBar.Bar
+
+local autoEatEnabled = false
+local foodsToEat = {
+    "Cooked Steak",
+    "Cooked Morsel",
+    "Berry",
+    "Carrot",
+    "Apple"
+}
+
+-- Find an available food instance from workspace.Items
+local function getAvailableFood()
+    for _, item in ipairs(itemsFolder:GetChildren()) do
+        if table.find(foodsToEat, item.Name) then
+            return item
+        end
+    end
+    return nil
+end
+
+-- Auto eat loop
+coroutine.wrap(function()
+    while true do
+        if autoEatEnabled then
+            local hungerValue = hungerBar.Size.X.Scale
+            if hungerValue < 1 then
+                local foodInstance = getAvailableFood()
+                if foodInstance then
+                    print("Auto-eating:", foodInstance.Name)
+                    local success, err = pcall(function()
+                        remoteConsume:InvokeServer(foodInstance)
+                    end)
+                    if not success then
+                        warn("Failed to consume food:", err)
+                    end
+                else
+                    warn("No food instance found in workspace.Items")
+                end
+            end
+        end
+        wait(1)
+    end
+end)()
+
+-- Hookup checkbox
+automationDropdown:AddCheckbox("Auto Eat Food", function(checked)
+    autoEatEnabled = checked
+    print("Auto Eat Food toggled:", checked)
+end)
+
+
+
+--
+
+
 automationDropdown:AddCheckbox("Auto Fuel Fire", function(checked)
     autoFuelFireEnabled = checked
 end)
@@ -957,5 +1023,9 @@ while true do
     end
 end
 
+
+-- auto Food
+
+-- auto food
 
 -- extra item automation
