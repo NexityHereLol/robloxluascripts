@@ -895,7 +895,7 @@ for groupName, itemList in pairs(bracket) do
 end
 
 -- separation for the automation
-itemtp:CreateComment("automation features below:")
+--autofarmss:CreateComment("automation features below:")
 
 local automationDropdown = autofarmss:CreateDropDown("Automation")
 
@@ -904,6 +904,7 @@ local autoCookFoodEnabled = false
 local autoBoltsEnabled = false
 
 --
+
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
@@ -917,6 +918,7 @@ local hungerBar = player.PlayerGui.Interface.StatBars.HungerBar.Bar
 local autoEatEnabled = false
 local hungerThreshold = 0.5
 local fullHunger = 1.0
+local forceEatInterval = 15
 
 local foodsToEat = {
     "Cooked Steak",
@@ -926,7 +928,6 @@ local foodsToEat = {
     "Apple"
 }
 
--- Finds first available food in workspace.Items matching foodsToEat
 local function getAvailableFood()
     for _, item in ipairs(itemsFolder:GetChildren()) do
         if table.find(foodsToEat, item.Name) then
@@ -937,6 +938,7 @@ local function getAvailableFood()
 end
 
 local isEating = false
+local lastEatTime = 0
 
 coroutine.wrap(function()
     while true do
@@ -946,34 +948,193 @@ coroutine.wrap(function()
             if not isEating and hungerValue <= hungerThreshold then
                 isEating = true
                 print("Hunger low, starting to eat")
+                lastEatTime = tick()
             elseif isEating and hungerValue >= fullHunger then
                 isEating = false
                 print("Hunger full, stopping eating")
             end
 
             if isEating then
+                local currentTime = tick()
                 local foodInstance = getAvailableFood()
-                if foodInstance then
-                    print("Auto-eating:", foodInstance.Name)
-                    local success, err = pcall(function()
-                        remoteConsume:InvokeServer(foodInstance)
-                    end)
-                    if not success then
-                        warn("Failed to consume food:", err)
+                local currentHunger = hungerBar.Size.X.Scale
+
+                if foodInstance and currentHunger < fullHunger then
+                    -- Eat if enough time passed OR hunger is below threshold
+                    if (currentTime - lastEatTime >= forceEatInterval) or (currentHunger <= hungerThreshold) then
+                        print("Auto-eating:", foodInstance.Name)
+                        local success, err = pcall(function()
+                            remoteConsume:InvokeServer(foodInstance)
+                        end)
+                        if not success then
+                            warn("Failed to consume food:", err)
+                        else
+                            lastEatTime = currentTime
+                        end
                     end
                 else
-                    warn("No food instance found in workspace.Items")
+                    isEating = false
+                    print("Stopping eat loop, hunger now full or no food found")
                 end
             end
         end
-        wait(1)
+        task.wait(0.5)
     end
 end)()
 
 automationDropdown:AddCheckbox("Auto Eat Food", function(checked)
     autoEatEnabled = checked
     print("Auto Eat Food toggled:", checked)
+    if checked then
+        lastEatTime = tick() -- Reset timer when enabled
+    end
 end)
+
+
+
+--
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local rootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+local axeDamageRemote = ReplicatedStorage.RemoteEvents.ToolDamageObject
+
+local toolsDamageIDs = {
+    ["Old Axe"] = "1_8982038982",
+    ["Good Axe"] = "112_8982038982",
+    ["Strong Axe"] = "116_8982038982",
+    ["Chainsaw"] = "647_8992824875"
+}
+
+local autoBreakEnabled = false
+local equippedToolName = "Old Axe" -- Change as needed
+
+local originalTreeCFrames = {}
+
+local function getSmallTrees()
+    local trees = {}
+
+    local function collectTrees(folder)
+        for _, obj in ipairs(folder:GetChildren()) do
+            if obj:IsA("Model") and obj.Name == "Small Tree" then
+                table.insert(trees, obj)
+            end
+        end
+    end
+
+    if workspace.Map and workspace.Map:FindFirstChild("Foliage") then
+        collectTrees(workspace.Map.Foliage)
+    end
+
+    if workspace.Map and workspace.Map:FindFirstChild("Landmarks") then
+        collectTrees(workspace.Map.Landmarks)
+    end
+
+    return trees
+end
+
+local function findTrunkPart(treeModel)
+    for _, descendant in ipairs(treeModel:GetDescendants()) do
+        if descendant.Name == "Trunk" and descendant:IsA("BasePart") then
+            return descendant
+        end
+    end
+    return nil
+end
+
+local function teleportTreesStacked(distance)
+    local trees = getSmallTrees()
+    if not rootPart then return {} end
+
+    local baseCFrame = rootPart.CFrame
+    local targetCFrame = CFrame.new(baseCFrame.Position + baseCFrame.LookVector * distance)
+
+    for _, tree in ipairs(trees) do
+        -- Store original CFrame if not already stored
+        if not originalTreeCFrames[tree] then
+            if tree.PrimaryPart then
+                originalTreeCFrames[tree] = tree.PrimaryPart.CFrame
+            else
+                local trunk = findTrunkPart(tree)
+                if trunk then
+                    originalTreeCFrames[tree] = trunk.CFrame
+                end
+            end
+        end
+
+        -- Teleport to stacked position
+        if tree.PrimaryPart then
+            tree:SetPrimaryPartCFrame(targetCFrame)
+        else
+            local trunk = findTrunkPart(tree)
+            if trunk then
+                tree.PrimaryPart = trunk
+                tree:SetPrimaryPartCFrame(targetCFrame)
+            end
+        end
+    end
+
+    return trees
+end
+
+local function restoreTrees()
+    for tree, originalCFrame in pairs(originalTreeCFrames) do
+        if tree and tree.PrimaryPart then
+            tree:SetPrimaryPartCFrame(originalCFrame)
+        end
+    end
+    originalTreeCFrames = {}
+end
+
+coroutine.wrap(function()
+    while true do
+        if autoBreakEnabled then
+            local trees = teleportTreesStacked(10)
+            for _, tree in ipairs(trees) do
+                if not autoBreakEnabled then break end
+
+                local trunk = findTrunkPart(tree)
+                if trunk and player.Inventory and player.Inventory:FindFirstChild(equippedToolName) then
+                    local damageID = toolsDamageIDs[equippedToolName]
+                    if damageID then
+                        local success, err = pcall(function()
+                            axeDamageRemote:InvokeServer(trunk, player.Inventory[equippedToolName], damageID, rootPart.CFrame)
+                        end)
+                        if not success then
+                            warn("Failed to damage trunk:", err)
+                        else
+                            print("Damaged trunk of tree:", tree.Name)
+                        end
+                    else
+                        warn("No damage ID for equipped tool:", equippedToolName)
+                    end
+                else
+                    warn("Missing trunk or tool:", tree.Name, equippedToolName)
+                end
+                wait(0.5)
+            end
+        else
+            -- If disabled, restore all trees to original positions
+            restoreTrees()
+        end
+        wait(1)
+    end
+end)()
+
+automationDropdown:AddCheckbox("Auto Bring All Small Trees", function(checked)
+    autoBreakEnabled = checked
+    print("Auto Bring All Small Trees toggled:", checked)
+    if not checked then
+        restoreTrees()
+    end
+end)
+
+
+
+--
 
 --
 
