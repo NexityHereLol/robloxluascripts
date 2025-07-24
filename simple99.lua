@@ -1000,26 +1000,22 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local workspace = game:GetService("Workspace")
 
-local player = Players.LocalPlayer
-local rootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-local axeDamageRemote = ReplicatedStorage.RemoteEvents.ToolDamageObject
 
-local toolsDamageIDs = {
-    ["Old Axe"] = "1_8982038982",
-    ["Good Axe"] = "112_8982038982",
-    ["Strong Axe"] = "116_8982038982",
-    ["Chainsaw"] = "647_8992824875"
-}
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local rootPart = player.Character and player.Character:WaitForChild("HumanoidRootPart")
 
 local autoBreakEnabled = false
-local equippedToolName = "Old Axe" -- Change as needed
-
 local originalTreeCFrames = {}
 
-local function getSmallTrees()
+-- Utility: get all small trees
+local function getAllSmallTrees()
     local trees = {}
 
-    local function collectTrees(folder)
+    local function collectFrom(folder)
         for _, obj in ipairs(folder:GetChildren()) do
             if obj:IsA("Model") and obj.Name == "Small Tree" then
                 table.insert(trees, obj)
@@ -1027,105 +1023,70 @@ local function getSmallTrees()
         end
     end
 
-    if workspace.Map and workspace.Map:FindFirstChild("Foliage") then
-        collectTrees(workspace.Map.Foliage)
+    if Workspace.Map:FindFirstChild("Foliage") then
+        collectFrom(Workspace.Map.Foliage)
     end
-
-    if workspace.Map and workspace.Map:FindFirstChild("Landmarks") then
-        collectTrees(workspace.Map.Landmarks)
+    if Workspace.Map:FindFirstChild("Landmarks") then
+        collectFrom(Workspace.Map.Landmarks)
     end
 
     return trees
 end
 
-local function findTrunkPart(treeModel)
+-- Utility: find Trunk
+local function getTrunkPart(treeModel)
     for _, descendant in ipairs(treeModel:GetDescendants()) do
-        if descendant.Name == "Trunk" and descendant:IsA("BasePart") then
+        if descendant:IsA("BasePart") and descendant.Name == "Trunk" then
             return descendant
         end
     end
     return nil
 end
 
-local function teleportTreesStacked(distance)
-    local trees = getSmallTrees()
-    if not rootPart then return {} end
+-- Bring all small trees in front of player
+local function bringAllTrees()
+    if not rootPart then return end
 
-    local baseCFrame = rootPart.CFrame
-    local targetCFrame = CFrame.new(baseCFrame.Position + baseCFrame.LookVector * distance)
+    local trees = getAllSmallTrees()
+    local targetPos = rootPart.Position + rootPart.CFrame.LookVector * 10
 
     for _, tree in ipairs(trees) do
-        -- Store original CFrame if not already stored
-        if not originalTreeCFrames[tree] then
-            if tree.PrimaryPart then
-                originalTreeCFrames[tree] = tree.PrimaryPart.CFrame
-            else
-                local trunk = findTrunkPart(tree)
-                if trunk then
-                    originalTreeCFrames[tree] = trunk.CFrame
-                end
+        local trunk = getTrunkPart(tree)
+        if trunk then
+            if not originalTreeCFrames[tree] then
+                originalTreeCFrames[tree] = trunk.CFrame
             end
-        end
 
-        -- Teleport to stacked position
-        if tree.PrimaryPart then
-            tree:SetPrimaryPartCFrame(targetCFrame)
-        else
-            local trunk = findTrunkPart(tree)
-            if trunk then
+            if not tree.PrimaryPart then
                 tree.PrimaryPart = trunk
-                tree:SetPrimaryPartCFrame(targetCFrame)
             end
+
+            tree:SetPrimaryPartCFrame(CFrame.new(targetPos))
         end
     end
-
-    return trees
 end
 
+-- Restore trees to their original CFrame
 local function restoreTrees()
-    for tree, originalCFrame in pairs(originalTreeCFrames) do
+    for tree, cframe in pairs(originalTreeCFrames) do
         if tree and tree.PrimaryPart then
-            tree:SetPrimaryPartCFrame(originalCFrame)
+            tree:SetPrimaryPartCFrame(cframe)
         end
     end
     originalTreeCFrames = {}
 end
 
+-- Loop to handle auto break logic
 coroutine.wrap(function()
     while true do
         if autoBreakEnabled then
-            local trees = teleportTreesStacked(10)
-            for _, tree in ipairs(trees) do
-                if not autoBreakEnabled then break end
-
-                local trunk = findTrunkPart(tree)
-                if trunk and player.Inventory and player.Inventory:FindFirstChild(equippedToolName) then
-                    local damageID = toolsDamageIDs[equippedToolName]
-                    if damageID then
-                        local success, err = pcall(function()
-                            axeDamageRemote:InvokeServer(trunk, player.Inventory[equippedToolName], damageID, rootPart.CFrame)
-                        end)
-                        if not success then
-                            warn("Failed to damage trunk:", err)
-                        else
-                            print("Damaged trunk of tree:", tree.Name)
-                        end
-                    else
-                        warn("No damage ID for equipped tool:", equippedToolName)
-                    end
-                else
-                    warn("Missing trunk or tool:", tree.Name, equippedToolName)
-                end
-                wait(0.5)
-            end
-        else
-            -- If disabled, restore all trees to original positions
-            restoreTrees()
+            bringAllTrees()
         end
-        wait(1)
+        task.wait(5) -- Every 5 seconds, re-bring trees
     end
 end)()
 
+-- ✅ Checkbox hookup:
 miscdropdown:AddCheckbox("Auto Bring All Small Trees", function(checked)
     autoBreakEnabled = checked
     print("Auto Bring All Small Trees toggled:", checked)
@@ -1134,7 +1095,7 @@ miscdropdown:AddCheckbox("Auto Bring All Small Trees", function(checked)
     end
 end)
 
-print("AutoFarm system loaded!")
+print(game.Players.LocalPlayer)
 
 
 -- auto 
