@@ -953,15 +953,6 @@ eatDropdown:AddCheckbox("Enable Auto Eat", function(checked)
     print("Auto Eat Food toggled:", checked)
 end)
 
-local miscdropdown = autofarmss:CreateDropDown("Auto Misc Features")
-miscdropdown:AddCheckbox("Auto Bring All Small Trees", function(checked)
-    autoBreakEnabled = checked
-    print("Auto Bring All Small Trees toggled:", checked)
-    if not checked then
-        restoreTrees()
-    end
-end)
-
 -- Helper Functions --
 
 -- Get available food instances from workspace.Items matching foodsToEat
@@ -1060,11 +1051,21 @@ coroutine.wrap(function()
     end
 end)()
 
--- Small Trees Handling
+--Tree Handling
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+local autoBreakEnabled = false
 local originalTreeCFrames = {}
 
+-- Get all Small Trees from Map.Foliage and Map.Landmarks
 local function getAllSmallTrees()
     local trees = {}
+
     local function collectFrom(folder)
         for _, obj in ipairs(folder:GetChildren()) do
             if obj:IsA("Model") and obj.Name == "Small Tree" then
@@ -1072,15 +1073,18 @@ local function getAllSmallTrees()
             end
         end
     end
-    if workspace.Map and workspace.Map:FindFirstChild("Foliage") then
-        collectFrom(workspace.Map.Foliage)
+
+    if Workspace.Map and Workspace.Map:FindFirstChild("Foliage") then
+        collectFrom(Workspace.Map.Foliage)
     end
-    if workspace.Map and workspace.Map:FindFirstChild("Landmarks") then
-        collectFrom(workspace.Map.Landmarks)
+    if Workspace.Map and Workspace.Map:FindFirstChild("Landmarks") then
+        collectFrom(Workspace.Map.Landmarks)
     end
+
     return trees
 end
 
+-- Find the "Trunk" part of a tree model
 local function findTrunk(treeModel)
     for _, descendant in ipairs(treeModel:GetDescendants()) do
         if descendant:IsA("BasePart") and descendant.Name == "Trunk" then
@@ -1090,10 +1094,13 @@ local function findTrunk(treeModel)
     return nil
 end
 
+-- Bring all Small Trees to one fixed position in front of player and lock them there
 local function bringAllTrees()
     if not rootPart then return end
+
     local trees = getAllSmallTrees()
     local targetPos = rootPart.Position + rootPart.CFrame.LookVector * 10
+    local targetCFrame = CFrame.new(targetPos)
 
     for _, tree in ipairs(trees) do
         local trunk = findTrunk(tree)
@@ -1101,38 +1108,53 @@ local function bringAllTrees()
             if not originalTreeCFrames[tree] then
                 originalTreeCFrames[tree] = trunk.CFrame
             end
+
+            -- Set PrimaryPart for easy movement
             tree.PrimaryPart = trunk
 
-            -- Temporarily disable collisions and anchor
-            trunk.CanCollide = false
+            -- Anchor and disable collisions for stability
             trunk.Anchored = true
+            trunk.CanCollide = false
 
-            tree:SetPrimaryPartCFrame(CFrame.new(targetPos))
-
-            trunk.Anchored = false
-            trunk.CanCollide = true
+            -- Move tree exactly to target CFrame (all same spot)
+            tree:SetPrimaryPartCFrame(targetCFrame)
         end
     end
 end
 
+-- Restore all trees to original CFrames and unanchor/un-disable collisions
 local function restoreTrees()
     for tree, cframe in pairs(originalTreeCFrames) do
         if tree and tree.PrimaryPart then
             tree:SetPrimaryPartCFrame(cframe)
+
+            -- Unanchor and re-enable collisions
+            tree.PrimaryPart.Anchored = false
+            tree.PrimaryPart.CanCollide = true
         end
     end
+
     originalTreeCFrames = {}
 end
 
--- Auto Bring Trees Coroutine
+-- Coroutine loop to keep trees locked in position while enabled
 coroutine.wrap(function()
     while true do
         if autoBreakEnabled then
             bringAllTrees()
         end
-        task.wait(5)
+        task.wait(1) -- Update every second to keep them locked
     end
 end)()
+
+local miscdropdown = autofarmss:CreateDropDown("Auto Misc Features")
+miscdropdown:AddCheckbox("Auto Bring All Small Trees", function(checked)
+    autoBreakEnabled = checked
+    print("Auto Bring All Small Trees toggled:", checked)
+    if not checked then
+        restoreTrees()
+    end
+end)
 
 
 -- auto 
