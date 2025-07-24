@@ -899,33 +899,38 @@ end
 
 -- auto 
 
+
+-- SERVICES
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local workspace = game:GetService("Workspace")
+local Workspace = game:GetService("Workspace")
 
+-- PLAYER REFERENCES
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local rootPart = character:WaitForChild("HumanoidRootPart")
-
-local itemsFolder = workspace:WaitForChild("Items")
-local remoteConsume = ReplicatedStorage.RemoteEvents.RequestConsumeItem
-local axeDamageRemote = ReplicatedStorage.RemoteEvents.ToolDamageObject
+local itemsFolder = Workspace:WaitForChild("Items")
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local remoteConsume = ReplicatedStorage.RemoteEvents.RequestConsumeItem
 
--- Item Lists
+-- POSITIONS
+local campfireDropPos = Vector3.new(0, 19, 0)
+local machineDropPos = Vector3.new(21, 16, -5)
+
+-- ITEM LISTS
 local campfireFuelItems = {"Log", "Coal", "Fuel Canister", "Oil Barrel", "Biofuel"}
 local autocookItems = {"Morsel", "Steak"}
 local autoGrindItems = {"UFO Junk", "UFO Component", "Old Car Engine", "Broken Fan", "Old Microwave", "Bolt", "Log", "Cultist Gem", "Sheet Metal", "Old Radio"}
 local autoEatFoods = {"Cooked Steak", "Cooked Morsel", "Berry", "Carrot", "Apple"}
 
--- States for toggles
+-- UI STATE TOGGLES
 local autoFuelEnabledItems = {}
 local autoCookEnabledItems = {}
 local autoGrindEnabledItems = {}
 local autoEatEnabled = false
 local autoBreakEnabled = false
 
--- Create dropdowns (replace autofarmss with your actual dropdown UI container)
+-- UI (replace `autofarmss` with your real UI dropdown object)
 local fuelDropdown = autofarmss:CreateDropDown("Auto Campfire (Fuel)")
 for _, itemName in ipairs(campfireFuelItems) do
     fuelDropdown:AddCheckbox(itemName, function(checked)
@@ -950,110 +955,101 @@ end
 local eatDropdown = autofarmss:CreateDropDown("Auto Eat")
 eatDropdown:AddCheckbox("Enable Auto Eat", function(checked)
     autoEatEnabled = checked
-    print("Auto Eat Food toggled:", checked)
+    print("Auto Eat toggled:", checked)
 end)
 
--- Helper Functions --
-
--- Get available food instances from workspace.Items matching foodsToEat
-local function getRandomAvailableFood()
-    local candidates = {}
-    for _, item in ipairs(itemsFolder:GetChildren()) do
-        if table.find(autoEatFoods, item.Name) then
-            table.insert(candidates, item)
+-- === SHARED TELEPORT FUNCTION === --
+local function moveItemToPos(item, position)
+    local part = item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart") or item:FindFirstChild("Handle")
+    if not part then return end
+    if (part.Position - position).Magnitude > 0.5 then
+        local success = pcall(function()
+            remoteEvents.RequestStartDraggingItem:FireServer(item)
+            part.CFrame = CFrame.new(position)
+            remoteEvents.StopDraggingItem:FireServer(item)
+        end)
+        if not success then
+            warn("Failed to move", item.Name)
         end
     end
-    if #candidates > 0 then
-        return candidates[math.random(1, #candidates)]
-    end
-    return nil
 end
 
--- Auto Eat Coroutine
+-- === AUTO EAT === --
 coroutine.wrap(function()
     local eatInterval = 3
     while true do
         if autoEatEnabled then
-            local foodInstance = getRandomAvailableFood()
-            if foodInstance then
-                print("Auto-eating:", foodInstance.Name)
-                local success, err = pcall(function()
-                    remoteConsume:InvokeServer(foodInstance)
-                end)
-                if not success then
-                    warn("Failed to consume food:", err)
+            local available = {}
+            for _, item in ipairs(itemsFolder:GetChildren()) do
+                if table.find(autoEatFoods, item.Name) then
+                    table.insert(available, item)
                 end
+            end
+            if #available > 0 then
+                local food = available[math.random(1, #available)]
+                print("Auto-eating:", food.Name)
+                pcall(function()
+                    remoteConsume:InvokeServer(food)
+                end)
             else
-                warn("No valid food to consume found in workspace.Items")
+                warn("No food found to eat.")
             end
         end
         task.wait(eatInterval)
     end
 end)()
 
--- Auto Campfire (Fuel)
-local campfireDropPos = Vector3.new(0, 19, 0)
+-- === AUTO CAMPFIRE FUEL === --
 coroutine.wrap(function()
     while true do
         for itemName, enabled in pairs(autoFuelEnabledItems) do
             if enabled then
                 for _, item in ipairs(itemsFolder:GetChildren()) do
                     if item.Name == itemName then
-                        -- Teleport fuel item to campfire drop position
-                        local part = item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart") or item:FindFirstChild("Handle")
-                        if part then
-                            part.CFrame = CFrame.new(campfireDropPos)
-                        end
+                        moveItemToPos(item, campfireDropPos)
                     end
                 end
             end
         end
-        task.wait(3)
+        task.wait(2.5)
     end
 end)()
 
--- Auto Cook Food (move Morsel & Steak to campfire drop)
+-- === AUTO COOK === --
 coroutine.wrap(function()
     while true do
         for itemName, enabled in pairs(autoCookEnabledItems) do
             if enabled then
                 for _, item in ipairs(itemsFolder:GetChildren()) do
                     if item.Name == itemName then
-                        local part = item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart") or item:FindFirstChild("Handle")
-                        if part then
-                            part.CFrame = CFrame.new(campfireDropPos)
-                        end
+                        moveItemToPos(item, campfireDropPos)
                     end
                 end
             end
         end
-        task.wait(3)
+        task.wait(2.5)
     end
 end)()
 
--- Auto Machine Grind
-local machineDropPos = Vector3.new(21, 16, -5)
+-- === AUTO GRIND === --
 coroutine.wrap(function()
     while true do
         for itemName, enabled in pairs(autoGrindEnabledItems) do
             if enabled then
                 for _, item in ipairs(itemsFolder:GetChildren()) do
                     if item.Name == itemName then
-                        local part = item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart") or item:FindFirstChild("Handle")
-                        if part then
-                            part.CFrame = CFrame.new(machineDropPos)
-                        end
+                        moveItemToPos(item, machineDropPos)
                     end
                 end
             end
         end
-        task.wait(3)
+        task.wait(2.5)
     end
 end)()
 
---Tree Handling
-local Players = game:GetService("Players")
+-- === TREE SYSTEM === --
 local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -1061,12 +1057,13 @@ local rootPart = character:WaitForChild("HumanoidRootPart")
 
 local autoBreakEnabled = false
 local originalTreeCFrames = {}
+local treesBrought = false
 
--- Get all Small Trees from Map.Foliage and Map.Landmarks
+-- Get all Small Trees from Map
 local function getAllSmallTrees()
     local trees = {}
 
-    local function collectFrom(folder)
+    local function collect(folder)
         for _, obj in ipairs(folder:GetChildren()) do
             if obj:IsA("Model") and obj.Name == "Small Tree" then
                 table.insert(trees, obj)
@@ -1074,84 +1071,71 @@ local function getAllSmallTrees()
         end
     end
 
-    if Workspace.Map and Workspace.Map:FindFirstChild("Foliage") then
-        collectFrom(Workspace.Map.Foliage)
+    if Workspace.Map:FindFirstChild("Foliage") then
+        collect(Workspace.Map.Foliage)
     end
-    if Workspace.Map and Workspace.Map:FindFirstChild("Landmarks") then
-        collectFrom(Workspace.Map.Landmarks)
+    if Workspace.Map:FindFirstChild("Landmarks") then
+        collect(Workspace.Map.Landmarks)
     end
 
     return trees
 end
 
--- Find the "Trunk" part of a tree model
 local function findTrunk(treeModel)
-    for _, descendant in ipairs(treeModel:GetDescendants()) do
-        if descendant:IsA("BasePart") and descendant.Name == "Trunk" then
-            return descendant
+    for _, part in ipairs(treeModel:GetDescendants()) do
+        if part:IsA("BasePart") and part.Name == "Trunk" then
+            return part
         end
     end
     return nil
 end
 
--- Bring all Small Trees to one fixed position in front of player and lock them there
+-- Move all trees to one spot
 local function bringAllTrees()
-    if not rootPart then return end
-
-    local trees = getAllSmallTrees()
-    local targetPos = rootPart.Position + rootPart.CFrame.LookVector * 10
-    local targetCFrame = CFrame.new(targetPos)
-
-    for _, tree in ipairs(trees) do
+    local targetCFrame = CFrame.new(rootPart.Position + rootPart.CFrame.LookVector * 10)
+    for _, tree in ipairs(getAllSmallTrees()) do
         local trunk = findTrunk(tree)
         if trunk then
             if not originalTreeCFrames[tree] then
                 originalTreeCFrames[tree] = trunk.CFrame
             end
 
-            -- Set PrimaryPart for easy movement
             tree.PrimaryPart = trunk
-
-            -- Anchor and disable collisions for stability
             trunk.Anchored = true
             trunk.CanCollide = false
 
-            -- Move tree exactly to target CFrame (all same spot)
             tree:SetPrimaryPartCFrame(targetCFrame)
         end
     end
 end
 
--- Restore all trees to original CFrames and unanchor/un-disable collisions
+-- Restore trees
 local function restoreTrees()
     for tree, cframe in pairs(originalTreeCFrames) do
         if tree and tree.PrimaryPart then
             tree:SetPrimaryPartCFrame(cframe)
-
-            -- Unanchor and re-enable collisions
             tree.PrimaryPart.Anchored = false
-            tree.PrimaryPart.CanCollide = true
+            task.delay(0.2, function()
+                if tree.PrimaryPart then
+                    tree.PrimaryPart.CanCollide = true
+                end
+            end)
         end
     end
-
     originalTreeCFrames = {}
+    treesBrought = false
 end
 
--- Coroutine loop to keep trees locked in position while enabled
-coroutine.wrap(function()
-    while true do
-        if autoBreakEnabled then
-            bringAllTrees()
-        end
-        task.wait(1) -- Update every second to keep them locked
-    end
-end)()
-
+-- UI checkbox toggle
 local miscdropdown = autofarmss:CreateDropDown("Auto Misc Features")
 miscdropdown:AddCheckbox("Auto Bring All Small Trees", function(checked)
     autoBreakEnabled = checked
     print("Auto Bring All Small Trees toggled:", checked)
-    if not checked then
+
+    if checked and not treesBrought then
+        bringAllTrees()
+        treesBrought = true
+    elseif not checked then
         restoreTrees()
     end
 end)
