@@ -995,12 +995,6 @@ eatDropdown:AddCheckbox("Enable Auto Eat", function(checked)
     print("Auto Eat Food toggled:", checked)
 end)
 
-local miscDropdown = autofarmss:CreateDropDown("Auto Misc Features")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local workspace = game:GetService("Workspace")
-
-
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -1086,7 +1080,11 @@ coroutine.wrap(function()
     end
 end)()
 
--- ✅ Checkbox hookup:
+local miscdropdown = autofarmss:CreateDropDown("Auto Misc Features")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local workspace = game:GetService("Workspace")
+
 miscdropdown:AddCheckbox("Auto Bring All Small Trees", function(checked)
     autoBreakEnabled = checked
     print("Auto Bring All Small Trees toggled:", checked)
