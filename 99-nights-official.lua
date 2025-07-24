@@ -682,6 +682,10 @@ civDropdown2:AddButton("infinite yield",function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
 end)
 
+civDropdown2:AddButton("emote gui",function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/dimension-sources/random-scripts-i-found/refs/heads/main/r6%20animations"))()
+end)
+
 civDropdown2:AddButton("anti afk",function()
     
     wait(0.5)local ba=Instance.new("ScreenGui")
