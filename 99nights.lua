@@ -974,6 +974,76 @@ automationDropdown:AddCheckbox("Auto Eat Food", function(checked)
     print("Auto Eat Food toggled:", checked)
 end)
 
+--
+
+local biofuelItems = {
+    "Carrot",
+    "Steak",
+    "Morsel",
+    "Cooked Morsel",
+    "Cooked Steak",
+    "Apple"
+}
+
+local biofuelProcessorPart = nil
+local function updateBiofuelProcessor()
+    local processor = workspace:FindFirstChild("Structures")
+    if processor then
+        local fuel = processor:FindFirstChild("Biofuel Processor")
+        if fuel and fuel:FindFirstChild("Part") then
+            biofuelProcessorPart = fuel.Part
+        else
+            biofuelProcessorPart = nil
+        end
+    end
+end
+
+local function autoSendToBiofuel()
+    updateBiofuelProcessor()
+    if not biofuelProcessorPart then return end
+
+    local count = 0
+    for _, item in ipairs(itemsFolder:GetChildren()) do
+        if table.find(biofuelItems, item.Name) then
+            local targetPart = nil
+
+            for _, desc in ipairs(item:GetDescendants()) do
+                if desc:IsA("Part") or desc:IsA("MeshPart") or desc:IsA("UnionOperation") then
+                    targetPart = desc
+                    break
+                end
+            end
+
+            if targetPart then
+                ReplicatedStorage.RemoteEvents.RequestStartDraggingItem:FireServer(item)
+
+                local dropOffset = Vector3.new(0, count * 2, 0) -- stack upwards
+                targetPart.CFrame = biofuelProcessorPart.CFrame + dropOffset
+
+                ReplicatedStorage.RemoteEvents.StopDraggingItem:FireServer(item)
+                count = count + 1
+            end
+        end
+    end
+end
+
+-- Hook it up to a checkbox
+local autoBiofuelEnabled = false
+
+automationDropdown:AddCheckbox("Auto Biofuel", function(checked)
+    autoBiofuelEnabled = checked
+end)
+
+-- Run loop separately
+task.spawn(function()
+    while true do
+        if autoBiofuelEnabled then
+            autoSendToBiofuel()
+        end
+        wait(2)
+    end
+end)
+
 
 --
 
@@ -1034,8 +1104,9 @@ while true do
 end
 
 
--- auto Food
+-- auto biof
 
--- auto food
+
+-- auto biof
 
 -- extra item automation
