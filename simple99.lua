@@ -912,7 +912,7 @@ local hungerBar = player.PlayerGui.Interface.StatBars.HungerBar.Bar
 
 -- Item lists
 local biofuelItems = {"Carrot","Steak","Morsel","Cooked Morsel","Cooked Steak","Apple"}
-local campfireFuelItems= {"Log", "Coal", "Fuel Canister", "Oil Barrel", "Biofuel", "Berry", "Carrot", "Morsel", "Cooked Morsel", "Steak", "Cooked Steak", "Apple"}
+local campfireFuelItems= {"Log", "Coal", "Fuel Canister", "Oil Barrel", "Biofuel"}
 local autocookItems = {"Morsel", "Steak"}
 local autoGrindItems = {"UFO Junk", "UFO Component", "Old Car Engine", "Broken Fan", "Old Microwave", "Bolt", "Log", "Cultist Gem", "Sheet Metal", "Old Radio"}
 
