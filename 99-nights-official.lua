@@ -928,7 +928,6 @@ end
 
 -- auto 
 
-
 -- SERVICES
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
@@ -940,155 +939,150 @@ local character = player.Character or player.CharacterAdded:Wait()
 local rootPart = character:WaitForChild("HumanoidRootPart")
 local itemsFolder = Workspace:WaitForChild("Items")
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
-local remoteConsume = ReplicatedStorage.RemoteEvents.RequestConsumeItem
+local remoteConsume = remoteEvents:WaitForChild("RequestConsumeItem")
 
--- POSITIONS
+-- DROP POSITIONS
 local campfireDropPos = Vector3.new(0, 19, 0)
 local machineDropPos = Vector3.new(21, 16, -5)
+local biofuelDropOffset = Vector3.new(0, 3, 0)  -- drop above processor
 
 -- ITEM LISTS
 local campfireFuelItems = {"Log", "Coal", "Fuel Canister", "Oil Barrel", "Biofuel"}
 local autocookItems = {"Morsel", "Steak"}
 local autoGrindItems = {"UFO Junk", "UFO Component", "Old Car Engine", "Broken Fan", "Old Microwave", "Bolt", "Log", "Cultist Gem", "Sheet Metal", "Old Radio"}
 local autoEatFoods = {"Cooked Steak", "Cooked Morsel", "Berry", "Carrot", "Apple"}
+local biofuelItems = {"Carrot", "Cooked Morsel", "Morsel", "Steak", "Cooked Steak"}
 
--- UI STATE TOGGLES
-local autoFuelEnabledItems = {}
-local autoCookEnabledItems = {}
-local autoGrindEnabledItems = {}
+-- STATE TABLES
+local autoFuelEnabledItems, autoCookEnabledItems, autoGrindEnabledItems = {}, {}, {}
 local autoEatEnabled = false
-local autoBreakEnabled = false
+local autoBreakEnabled = false  -- tree bring
+local autoBiofuelEnabledItems = {}
 
--- UI (replace `autofarmss` with your real UI dropdown object)
+-- UTILITY: toggle housekeeping
+local function handleToggle(tbl, name, checked)
+    if checked then tbl[name] = true else tbl[name] = nil end
+end
+
+-- UI: create dropdowns (replace `autofarmss` with your UI instance)
 local fuelDropdown = autofarmss:CreateDropDown("Auto Campfire (Fuel)")
-for _, itemName in ipairs(campfireFuelItems) do
-    fuelDropdown:AddCheckbox(itemName, function(checked)
-        autoFuelEnabledItems[itemName] = checked
-    end)
+for _, n in ipairs(campfireFuelItems) do
+  fuelDropdown:AddCheckbox(n, function(c) handleToggle(autoFuelEnabledItems, n, c) end)
 end
 
 local cookDropdown = autofarmss:CreateDropDown("Auto Cook Food")
-for _, itemName in ipairs(autocookItems) do
-    cookDropdown:AddCheckbox(itemName, function(checked)
-        autoCookEnabledItems[itemName] = checked
-    end)
+for _, n in ipairs(autocookItems) do
+  cookDropdown:AddCheckbox(n, function(c) handleToggle(autoCookEnabledItems, n, c) end)
 end
 
 local grindDropdown = autofarmss:CreateDropDown("Auto Machine Grind")
-for _, itemName in ipairs(autoGrindItems) do
-    grindDropdown:AddCheckbox(itemName, function(checked)
-        autoGrindEnabledItems[itemName] = checked
-    end)
+for _, n in ipairs(autoGrindItems) do
+  grindDropdown:AddCheckbox(n, function(c) handleToggle(autoGrindEnabledItems, n, c) end)
 end
 
 local eatDropdown = autofarmss:CreateDropDown("Auto Eat")
-eatDropdown:AddCheckbox("Enable Auto Eat", function(checked)
-    autoEatEnabled = checked
-    print("Auto Eat toggled:", checked)
+eatDropdown:AddCheckbox("Enable Auto Eat", function(c)
+  autoEatEnabled = c
+  print("Auto Eat toggled:", c)
 end)
 
--- === SHARED TELEPORT FUNCTION === --
-local function moveItemToPos(item, position)
-    local part = item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart") or item:FindFirstChild("Handle")
-    if not part then return end
-    if (part.Position - position).Magnitude > 0.5 then
-        local success = pcall(function()
-            remoteEvents.RequestStartDraggingItem:FireServer(item)
-            part.CFrame = CFrame.new(position)
-            remoteEvents.StopDraggingItem:FireServer(item)
-        end)
-        if not success then
-            warn("Failed to move", item.Name)
-        end
-    end
+local biofuelDropdown = autofarmss:CreateDropDown("Auto Biofuel")
+for _, n in ipairs(biofuelItems) do
+  biofuelDropdown:AddCheckbox(n, function(c)
+    handleToggle(autoBiofuelEnabledItems, n, c)
+  end)
 end
 
--- === AUTO EAT === --
-coroutine.wrap(function()
-    local eatInterval = 3
-    while true do
-        if autoEatEnabled then
-            local available = {}
-            for _, item in ipairs(itemsFolder:GetChildren()) do
-                if table.find(autoEatFoods, item.Name) then
-                    table.insert(available, item)
-                end
-            end
-            if #available > 0 then
-                local food = available[math.random(1, #available)]
-                print("Auto-eating:", food.Name)
-                pcall(function()
-                    remoteConsume:InvokeServer(food)
-                end)
-            else
-                warn("No food found to eat.")
-            end
-        end
-        task.wait(eatInterval)
+local miscdropdown = autofarmss:CreateDropDown("Auto Misc Features")
+miscdropdown:AddCheckbox("Auto Bring All Small Trees", function(checked)
+  autoBreakEnabled = checked
+  print("Auto Bring Trees toggled:", checked)
+  if checked then
+    bringAllTrees()
+  else
+    restoreTrees()
+  end
+end)
+
+-- MOVE FUNCTION
+local function moveItemToPos(item, pos)
+  local part = item.PrimaryPart or item:FindFirstChildWhichIsA("BasePart") or item:FindFirstChild("Handle")
+  if not part then return end
+  if (part.Position - pos).Magnitude > 0.5 then
+    local ok, err = pcall(function()
+      remoteEvents.RequestStartDraggingItem:FireServer(item)
+      task.wait()
+      part.CFrame = CFrame.new(pos)
+      task.wait()
+      remoteEvents.StopDraggingItem:FireServer(item)
+    end)
+    if not ok then warn("Error moving", item.Name, err) end
+  end
+end
+
+-- SHARED DROPPER
+local function handleAutoDrop(tbl, pos)
+  for name in pairs(tbl) do
+    for _, item in ipairs(itemsFolder:GetChildren()) do
+      if item.Name == name then moveItemToPos(item, pos) end
     end
+  end
+end
+
+-- COROUTINES
+coroutine.wrap(function()
+  while true do
+    handleAutoDrop(autoFuelEnabledItems, campfireDropPos)
+    task.wait(1.5)
+  end
 end)()
 
--- === AUTO CAMPFIRE FUEL === --
 coroutine.wrap(function()
-    while true do
-        for itemName, enabled in pairs(autoFuelEnabledItems) do
-            if enabled then
-                for _, item in ipairs(itemsFolder:GetChildren()) do
-                    if item.Name == itemName then
-                        moveItemToPos(item, campfireDropPos)
-                    end
-                end
-            end
-        end
-        task.wait(2.5)
-    end
+  while true do
+    handleAutoDrop(autoCookEnabledItems, campfireDropPos)
+    task.wait(1.5)
+  end
 end)()
 
--- === AUTO COOK === --
 coroutine.wrap(function()
-    while true do
-        for itemName, enabled in pairs(autoCookEnabledItems) do
-            if enabled then
-                for _, item in ipairs(itemsFolder:GetChildren()) do
-                    if item.Name == itemName then
-                        moveItemToPos(item, campfireDropPos)
-                    end
-                end
-            end
-        end
-        task.wait(2.5)
-    end
+  while true do
+    handleAutoDrop(autoGrindEnabledItems, machineDropPos)
+    task.wait(1.5)
+  end
 end)()
 
--- === AUTO GRIND === --
 coroutine.wrap(function()
-    while true do
-        for itemName, enabled in pairs(autoGrindEnabledItems) do
-            if enabled then
-                for _, item in ipairs(itemsFolder:GetChildren()) do
-                    if item.Name == itemName then
-                        moveItemToPos(item, machineDropPos)
-                    end
-                end
-            end
+  while true do
+    if autoEatEnabled then
+      for _, item in ipairs(itemsFolder:GetChildren()) do
+        if table.find(autoEatFoods, item.Name) then
+          print("Auto‑eating:", item.Name)
+          local ok, res = pcall(function() return remoteConsume:InvokeServer(item) end)
+          if not ok then warn("Eat failed", item.Name, res) end
+          break
         end
-        task.wait(2.5)
+      end
     end
+    task.wait(2.5)
+  end
 end)()
 
--- === TREE SYSTEM === --
-local Workspace = game:GetService("Workspace")
-local Players = game:GetService("Players")
+coroutine.wrap(function()
+  while true do
+    local proc = Workspace.Structures:FindFirstChild("Biofuel Processor")
+    local part = proc and proc:FindFirstChild("Part")
+    if part then
+      local dropPos = part.Position + biofuelDropOffset
+      handleAutoDrop(autoBiofuelEnabledItems, dropPos)
+    end
+    task.wait(1.5)
+  end
+end)()
 
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local rootPart = character:WaitForChild("HumanoidRootPart")
-
-local autoBreakEnabled = false
+-- === FIXED TREE SYSTEM ===
 local originalTreeCFrames = {}
 local treesBrought = false
 
--- Get all Small Trees from Map
 local function getAllSmallTrees()
     local trees = {}
 
@@ -1100,11 +1094,13 @@ local function getAllSmallTrees()
         end
     end
 
-    if Workspace.Map:FindFirstChild("Foliage") then
-        collect(Workspace.Map.Foliage)
-    end
-    if Workspace.Map:FindFirstChild("Landmarks") then
-        collect(Workspace.Map.Landmarks)
+    if Workspace:FindFirstChild("Map") then
+        if Workspace.Map:FindFirstChild("Foliage") then
+            collect(Workspace.Map.Foliage)
+        end
+        if Workspace.Map:FindFirstChild("Landmarks") then
+            collect(Workspace.Map.Landmarks)
+        end
     end
 
     return trees
@@ -1119,34 +1115,50 @@ local function findTrunk(treeModel)
     return nil
 end
 
--- Move all trees to one spot
 local function bringAllTrees()
+    local trees = getAllSmallTrees()
     local targetCFrame = CFrame.new(rootPart.Position + rootPart.CFrame.LookVector * 10)
-    for _, tree in ipairs(getAllSmallTrees()) do
+
+    for _, tree in ipairs(trees) do
         local trunk = findTrunk(tree)
         if trunk then
+            -- Cache original position
             if not originalTreeCFrames[tree] then
                 originalTreeCFrames[tree] = trunk.CFrame
             end
 
+            -- Ensure tree has a PrimaryPart set
             tree.PrimaryPart = trunk
-            trunk.Anchored = true
+
+            -- Unanchor before move (helps with CFrame replication issues)
+            trunk.Anchored = false
             trunk.CanCollide = false
 
-            tree:SetPrimaryPartCFrame(targetCFrame)
+            -- Teleport tree trunk
+            task.wait()
+            tree:SetPrimaryPartCFrame(targetCFrame + Vector3.new(math.random(-5, 5), 0, math.random(-5, 5)))
+
+            -- Anchor after move
+            task.wait()
+            trunk.Anchored = true
+
+            print("Moved tree:", tree:GetFullName())
         end
     end
+
+    treesBrought = true
 end
 
--- Restore trees
 local function restoreTrees()
     for tree, cframe in pairs(originalTreeCFrames) do
-        if tree and tree.PrimaryPart then
+        local trunk = findTrunk(tree)
+        if trunk then
+            tree.PrimaryPart = trunk
             tree:SetPrimaryPartCFrame(cframe)
-            tree.PrimaryPart.Anchored = false
+            trunk.Anchored = false
             task.delay(0.2, function()
-                if tree.PrimaryPart then
-                    tree.PrimaryPart.CanCollide = true
+                if trunk then
+                    trunk.CanCollide = true
                 end
             end)
         end
@@ -1154,20 +1166,6 @@ local function restoreTrees()
     originalTreeCFrames = {}
     treesBrought = false
 end
-
--- UI checkbox toggle
-local miscdropdown = autofarmss:CreateDropDown("Auto Misc Features")
-miscdropdown:AddCheckbox("Auto Bring All Small Trees", function(checked)
-    autoBreakEnabled = checked
-    print("Auto Bring All Small Trees toggled:", checked)
-
-    if checked and not treesBrought then
-        bringAllTrees()
-        treesBrought = true
-    elseif not checked then
-        restoreTrees()
-    end
-end)
 
 
 -- auto 
