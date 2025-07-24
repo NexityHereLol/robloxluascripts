@@ -422,7 +422,7 @@ end
 -- === Player Sliders ===
 
 -- JumpPower Slider
-plr:CreateSlider("jumppower", 500, 50, function(value)
+plr:CreateSlider("jumppower", 700, 50, function(value)
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
         char.Humanoid.JumpPower = value
@@ -430,7 +430,7 @@ plr:CreateSlider("jumppower", 500, 50, function(value)
 end)
 
 -- WalkSpeed Slider with Persistent Behavior
-plr:CreateSlider("walkspeed", 500, 16, function(value)
+plr:CreateSlider("walkspeed", 700, 16, function(value)
     _G.HackedWalkSpeed = value
 
     local function applyWalkSpeed(humanoid)
@@ -788,8 +788,8 @@ main:CreateCheckbox("Kill Aura", function(state)
 end)
 
 -- UI slider for radius, with clamping and updating
-main:CreateSlider("Kill Aura Radius", 500, 50, function(value)
-    radius = math.clamp(value, 20, 1000)
+main:CreateSlider("Kill Aura Radius", 700, 50, function(value)
+    radius = math.clamp(value, 20, 700)
 end)
 
 
@@ -828,7 +828,7 @@ local bracket = {
         "Rifle", "Revolver", "Raygun", "Tactical Shotgun", "Revolver Ammo", "Rifle Ammo"
     },
     materials = {
-        "Log", "Coal", "Fuel Canister", "UFO Junk", "UFO Component",
+        "Log", "Coal", "Fuel Canister", "UFO Junk", "UFO Component", "Bandage", "MedKit",
         "Old Car Engine", "Broken Fan", "Old Microwave", "Old Radio", "Sheet Metal"
     },
     pelts = {
