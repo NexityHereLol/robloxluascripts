@@ -1020,7 +1020,10 @@ local remoteConsume = ReplicatedStorage.RemoteEvents.RequestConsumeItem
 -- POSITIONS
 local campfireDropPos = Vector3.new(0, 19, 0)
 local machineDropPos = Vector3.new(21, 16, -5)
-local biofuelProcessorPos = Workspace.Structures["Biofuel Processor"].Part.Position + Vector3.new(0, 5, 0) -- offset above main part
+local biofuelProcessor = Workspace:WaitForChild("Structures"):WaitForChild("Biofuel Processor")
+local part = biofuelProcessor:WaitForChild("Part")
+
+part.Position = part.Position + Vector3.new(0, 5, 0)
 
 -- ITEM LISTS
 local campfireFuelItems = {"Log", "Coal", "Fuel Canister", "Oil Barrel", "Biofuel"}
