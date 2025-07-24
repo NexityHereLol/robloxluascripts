@@ -1004,6 +1004,7 @@ end
 -- auto 
 
 
+
 -- SERVICES
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
@@ -1020,10 +1021,6 @@ local remoteConsume = ReplicatedStorage.RemoteEvents.RequestConsumeItem
 -- POSITIONS
 local campfireDropPos = Vector3.new(0, 19, 0)
 local machineDropPos = Vector3.new(21, 16, -5)
-local biofuelProcessor = Workspace:WaitForChild("Structures"):WaitForChild("Biofuel Processor")
-local part = biofuelProcessor:WaitForChild("Part")
-
-part.Position = part.Position + Vector3.new(0, 5, 0)
 
 -- ITEM LISTS
 local campfireFuelItems = {"Log", "Coal", "Fuel Canister", "Oil Barrel", "Biofuel"}
@@ -1040,7 +1037,7 @@ local autoEatEnabled = false
 local autoBreakEnabled = false
 local autoBiofuelEnabledItems = {}
 
--- UI (replace `autofarmss` with your real UI dropdown object)
+-- UI
 local fuelDropdown = autofarmss:CreateDropDown("Auto Campfire (Fuel)")
 for _, itemName in ipairs(campfireFuelItems) do
     fuelDropdown:AddCheckbox(itemName, function(checked)
@@ -1108,8 +1105,6 @@ coroutine.wrap(function()
                 pcall(function()
                     remoteConsume:InvokeServer(food)
                 end)
-            else
-                -- No food available, do nothing or warn
             end
         end
         task.wait(eatInterval)
@@ -1123,7 +1118,7 @@ local fillFrame = campfireModel.Center.BillboardGui.Frame.Background.Fill
 coroutine.wrap(function()
     while true do
         local healthPercent = fillFrame and fillFrame.Size.X.Scale or 1
-        if healthPercent < 0.7 then  -- below 70%
+        if healthPercent < 0.7 then
             for itemName, enabled in pairs(autoFuelEnabledItems) do
                 if enabled then
                     for _, item in ipairs(itemsFolder:GetChildren()) do
@@ -1170,29 +1165,43 @@ coroutine.wrap(function()
     end
 end)()
 
--- === AUTO BIOFUEL PROCESSOR ===
+-- === AUTO BIOFUEL PROCESSOR (NON-BLOCKING) ===
 coroutine.wrap(function()
+    local biofuelProcessorPos = nil
+
     while true do
-        for itemName, enabled in pairs(autoBiofuelEnabledItems) do
-            if enabled then
-                for _, item in ipairs(itemsFolder:GetChildren()) do
-                    if item.Name == itemName then
-                        moveItemToPos(item, biofuelProcessorPos)
+        if not biofuelProcessorPos then
+            local structures = Workspace:FindFirstChild("Structures")
+            local processor = structures and structures:FindFirstChild("Biofuel Processor")
+            local part = processor and processor:FindFirstChild("Part")
+            if part then
+                biofuelProcessorPos = part.Position + Vector3.new(0, 5, 0)
+                print("Biofuel Processor found.")
+            end
+        end
+
+        if biofuelProcessorPos then
+            for itemName, enabled in pairs(autoBiofuelEnabledItems) do
+                if enabled then
+                    for _, item in ipairs(itemsFolder:GetChildren()) do
+                        if item.Name == itemName then
+                            moveItemToPos(item, biofuelProcessorPos)
+                        end
                     end
                 end
             end
         end
+
         task.wait(2)
     end
 end)()
 
--- === TREE SYSTEM (Fixed to reliably bring trees near player) ===
+-- === TREE SYSTEM ===
 local originalTreeCFrames = {}
 local treesBrought = false
 
 local function getAllSmallTrees()
     local trees = {}
-
     local function collect(folder)
         for _, obj in ipairs(folder:GetChildren()) do
             if obj:IsA("Model") and obj.Name == "Small Tree" then
@@ -1200,7 +1209,6 @@ local function getAllSmallTrees()
             end
         end
     end
-
     if Workspace:FindFirstChild("Map") then
         if Workspace.Map:FindFirstChild("Foliage") then
             collect(Workspace.Map.Foliage)
@@ -1209,7 +1217,6 @@ local function getAllSmallTrees()
             collect(Workspace.Map.Landmarks)
         end
     end
-
     return trees
 end
 
@@ -1232,18 +1239,13 @@ local function bringAllTrees()
             if not originalTreeCFrames[tree] then
                 originalTreeCFrames[tree] = trunk.CFrame
             end
-
             tree.PrimaryPart = trunk
-
             trunk.Anchored = false
             trunk.CanCollide = false
-
             task.wait()
             tree:SetPrimaryPartCFrame(targetCFrame + Vector3.new(math.random(-5, 5), 0, math.random(-5, 5)))
-
             task.wait()
             trunk.Anchored = true
-
             print("Moved tree:", tree:GetFullName())
         end
     end
@@ -1281,6 +1283,7 @@ miscdropdown:AddCheckbox("Auto Bring All Small Trees", function(checked)
         restoreTrees()
     end
 end)
+
 
 
 
