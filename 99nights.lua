@@ -938,7 +938,7 @@ coroutine.wrap(function()
     while true do
         if autoEatEnabled then
             local hungerValue = hungerBar.Size.X.Scale
-            if hungerValue < 1 then
+            if hungerValue < 0.5 then
                 local foodInstance = getAvailableFood()
                 if foodInstance then
                     print("Auto-eating:", foodInstance.Name)
